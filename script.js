@@ -9,19 +9,19 @@ function attack() {
 	const image = document.getElementById('flash-image');
     const diceElement = document.getElementById('dice');
 	const results= [];
-	forEach(die in dice){
+	dice.forEach((die) =>{
 		results.add(roll(die));
-	}
+	});
 	diceElement.textContent ="";
 	const numberMap = new Map();
 	diceElement.textContent = result;
-	forEach(result in results){
+	result.forEach((result)=>{
 		if (numberMap.has(num)) {
             numberMap.set(num, numberMap.get(num) + 1);
         } else {
             numberMap.set(num, 1);
         }
-	}
+	});
 	let dmg = 0;
 	for (const [num, count] of numberMap.entries()) {
         if (count > 1) {
