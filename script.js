@@ -53,13 +53,12 @@ function roll(die){
 function updateStats() {
     document.getElementById('hp').textContent = hp;
     document.getElementById('money').textContent = money;
-    document.getElementById('dice-value').textContent = dice;
+    document.getElementById('dice-value').textContent = formatDice(dice);
 }
 
 function saveData() {
     localStorage.setItem('hp', hp);
     localStorage.setItem('money', money);
-    localStorage.setItem('dice', dice);
 }
 function createAdventure(){
 	const player ={
@@ -70,7 +69,13 @@ function createAdventure(){
 	}
 	localStorage.setItem("player", JSON.stringify(player));
 	return JSON.stringify(player);
+}
 
+function formatDice(dice){
+	const combo = "";
+	dice.forEach((num)=>{
+		combo = combo+"[" num.sides + "], "
+	})
 }
 // Display initial stats
 updateStats();
