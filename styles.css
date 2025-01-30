@@ -15,7 +15,7 @@ body {
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 .dice {
-    font-size: 50rem;
+    font-size: 20rem;
     margin-bottom: 20px;
 }
 .roll-button {

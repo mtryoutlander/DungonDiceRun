@@ -14,8 +14,8 @@ function attack() {
 	}
 	diceElement.textContent ="";
 	const numberMap = new Map();
+	diceElement.textContent = result;
 	forEach(result in results){
-		diceElement.textContent = diceElement.textContent +","+ Dindex[result];
 		if (numberMap.has(num)) {
             numberMap.set(num, numberMap.get(num) + 1);
         } else {
