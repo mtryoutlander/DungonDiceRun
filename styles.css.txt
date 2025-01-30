@@ -47,5 +47,5 @@ img {
 }
 
 .flashing {
-    animation: flashRed 1s infinite;
+    animation: flashRed 1s ;
 }

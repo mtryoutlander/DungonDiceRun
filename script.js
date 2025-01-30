@@ -12,9 +12,12 @@ function attack() {
     dice = randomIndex + 1; // Update dice value (1-6)
     diceElement.textContent = diceFaces[randomIndex];
 	image.classList.add('flashing');
+	image.addEventListener('animationend', () => {
+        image.classList.remove('flash-once');
+    }, { once: true });
     updateStats(); // Update displayed stats
     saveData(); // Save data to localStorage
-	image.classList.remove('flashing');
+	
 }
 
 function updateStats() {
