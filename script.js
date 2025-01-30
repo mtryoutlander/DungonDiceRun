@@ -5,13 +5,16 @@ let hp = localStorage.getItem('hp') ? parseInt(localStorage.getItem('hp')) : 100
 let money = localStorage.getItem('money') ? parseInt(localStorage.getItem('money')) : 50;
 let dice = localStorage.getItem('dice') ? parseInt(localStorage.getItem('dice')) : 1;
 
-function rollDice() {
+function attack() {
+	const image = document.getElementById('flash-image');
     const diceElement = document.getElementById('dice');
     const randomIndex = Math.floor(Math.random() * diceFaces.length);
     dice = randomIndex + 1; // Update dice value (1-6)
     diceElement.textContent = diceFaces[randomIndex];
+	image.classList.add('flashing');
     updateStats(); // Update displayed stats
     saveData(); // Save data to localStorage
+	image.classList.remove('flashing');
 }
 
 function updateStats() {

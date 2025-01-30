@@ -30,3 +30,22 @@ body {
 .roll-button:hover {
     background-color: #0056b3;
 }
+.container {
+    text-align: center;
+}
+img {
+    width: 200px;
+    height: auto;
+    border: 2px solid #000;
+}
+
+/* Define the flashing animation */
+@keyframes flashRed {
+    0% { filter: brightness(100%); }
+    50% { filter: brightness(100%) drop-shadow(0 0 10px red); }
+    100% { filter: brightness(100%); }
+}
+
+.flashing {
+    animation: flashRed 0.5s infinite;
+}
