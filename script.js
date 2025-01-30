@@ -72,3 +72,4 @@ function createAdventure(){
 }
 // Display initial stats
 updateStats();
+createAdventure();
