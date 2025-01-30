@@ -15,12 +15,12 @@ body {
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 .dice {
-    font-size: 5rem;
+    font-size: 50rem;
     margin-bottom: 20px;
 }
 .roll-button {
     padding: 10px 20px;
-    font-size: 1rem;
+    font-size: 10rem;
     color: #fff;
     background-color: #007bff;
     border: none;
