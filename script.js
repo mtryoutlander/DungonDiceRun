@@ -15,8 +15,9 @@ function attack() {
 	});
 	diceElement.textContent ="";
 	const numberMap = new Map();
-	diceElement.textContent = result;
-	result.forEach((result)=>{
+	diceElement.textContent = results;
+	results.forEach((result)=>{
+		/* diceElement.textContent = diceElement.textContent + ", " result; */
 		if (numberMap.has(num)) {
             numberMap.set(num, numberMap.get(num) + 1);
         } else {
