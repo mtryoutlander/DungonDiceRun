@@ -8,6 +8,7 @@ const dice = JSON.parse(localStorage.getItem("player") ).dice ;
 function attack() {
 	const image = document.getElementById('flash-image');
     const diceElement = document.getElementById('dice');
+	const damageElement = document.getElementById('damage');
 	const results= [];
 	dice.forEach((die) =>{
 		results.add(roll(die));
@@ -32,7 +33,7 @@ function attack() {
             dmg += num;
         }
     }
-	damage-container.textContent = dmg;
+	damageElement.textContent = dmg;
 	
 	image.classList.add('flashing');
 	image.addEventListener('animationend', () => {
