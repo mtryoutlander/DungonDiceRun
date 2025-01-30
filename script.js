@@ -11,7 +11,7 @@ function attack() {
 	const damageElement = document.getElementById('damage');
 	const results= [];
 	dice.forEach((die) =>{
-		results.add(roll(die));
+		results.push(roll(die));
 	});
 	diceElement.textContent ="";
 	const numberMap = new Map();
