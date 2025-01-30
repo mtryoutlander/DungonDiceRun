@@ -3,7 +3,7 @@ const Dindex = ['1','2','3','4','5','6','7','8'];
 // Load saved data or initialize defaults
 let hp = localStorage.getItem('hp') ? parseInt(localStorage.getItem('hp')) : 100;
 let money = localStorage.getItem('money') ? parseInt(localStorage.getItem('money')) : 50;
-const dice = JSON.parse(localStorage.getItem('player')? createAdventure() ).dice ;
+const dice = JSON.parse(localStorage.getItem('player')? localStorage.getItem('player') : createAdventure() ).dice ;
 
 function attack() {
 	const image = document.getElementById('flash-image');
