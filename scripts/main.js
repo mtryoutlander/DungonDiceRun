@@ -1,4 +1,4 @@
-import { Application, Graphics, Text, TextStyle } from "pixi.js";  // will use onces packageing app 
+//import { Application, Graphics, Text, TextStyle } from "pixi.js";  // will use onces packageing app 
 
 // Load saved data or initialize defaults
 const player = JSON.parse(localStorage.getItem('player') ? localStorage.getItem('player') : createAdventure());
