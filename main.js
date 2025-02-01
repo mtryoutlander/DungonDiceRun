@@ -1,4 +1,4 @@
-import { Application, Graphics, Texture, Text, TextStyle, Color } from "pixi.js";
+import { Application, Graphics, Texture, Text, TextStyle, Color } from "./pixi.js/lib/index.js";
 
 // Load saved data or initialize defaults
 const player = JSON.parse(localStorage.getItem('player') ? localStorage.getItem('player') : createAdventure());
