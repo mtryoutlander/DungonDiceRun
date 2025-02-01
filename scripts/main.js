@@ -1,4 +1,4 @@
-import { Application, Graphics, Text, TextStyle } from "pixi.js";
+import { Application, Graphics, Text, TextStyle } from "pixi.js";  // will use onces packageing app 
 
 // Load saved data or initialize defaults
 const player = JSON.parse(localStorage.getItem('player') ? localStorage.getItem('player') : createAdventure());
@@ -6,7 +6,7 @@ const player = JSON.parse(localStorage.getItem('player') ? localStorage.getItem(
 //controls the game state and draws to the canvas
 (async () => {
 	//stuff
-	const app = new Application();
+	const app = new PIXI.Application();
 	globalThis.__PIXI_APP__ = app;
 	await app.init({
 		resizeTo: window
@@ -15,13 +15,13 @@ const player = JSON.parse(localStorage.getItem('player') ? localStorage.getItem(
 	document.body.appendChild(app.canvas);
 
 	//text styles
-	const textStyle = new TextStyle({
+	const textStyle = new PIXI.TextStyle({
 		fill: 0xffffff,  //white
 		fontSize: 30,
 		fontFamily: 'Montserrat Medium'
 	})
 	// create button image
-	const button = new Graphics()
+	const button = new PIXI.Graphics()
 		.rect(424.5, 224, 108, 158)
 		.fill({
 			color: 0xffea00,
@@ -43,17 +43,17 @@ const player = JSON.parse(localStorage.getItem('player') ? localStorage.getItem(
 		let dmg = caculateDmg(results);
 		console.log("Rolled: " + results + '\n' + "Total Damage: " + dmg);
 		for (let i = 0; i < results.length; i++) {
-			let dice = new Graphics()
+			let dice = new PIXI.Graphics()
 				.rect(0, 0, 35, 35)
 				.fill({ color: 'red' });
 			dice.x = 100 + (i * 40);
 			dice.y = 200;
-			let face = new Text(results[i], textStyle)
+			let face = new PIXI.Text(results[i], textStyle)
 			app.stage.addChild(dice);
 			dice.addChild(face);
 		}
-		let damageTotal = new Text(dmg, textStyle);
-		let blackBox = new Graphics()
+		let damageTotal = new PIXI.Text(dmg, textStyle);
+		let blackBox = new PIXI.Graphics()
 			.rect(0, 0, 40, 80)
 			.fill({ color: 'black' });
 		blackBox.x = 140;
