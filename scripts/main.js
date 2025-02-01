@@ -38,6 +38,8 @@ const player = JSON.parse(localStorage.getItem('player') ? localStorage.getItem(
 
 	// Add event listeners
 	button.on('pointerdown', () => {
+		// Assuming `app` is your PIXI.Application instance
+		app.stage.removeChildren();
 		console.log('Button clicked!');
 		let results = attack();
 		let dmg = caculateDmg(results);
@@ -60,6 +62,7 @@ const player = JSON.parse(localStorage.getItem('player') ? localStorage.getItem(
 		blackBox.y = 300;
 		app.stage.addChild(blackBox);
 		blackBox.addChild(damageTotal);
+		app.stage.addChild(button);
 	});
 
 	// Add the button to the stage
