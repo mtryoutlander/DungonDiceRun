@@ -1,5 +1,8 @@
 //import { Application, Graphics, Text, TextStyle } from "pixi.js";  // will use onces packaging app 
 
+(async()=>{
+
+
 // Load saved data or initialize defaults
 const player = JSON.parse(localStorage.getItem('player') ? localStorage.getItem('player') : createAdventure());
 
@@ -117,7 +120,7 @@ function drawDice(results) {
 				die.sprite.anchor.set(0.5);
 				die.sprite.position.set(i * 100, 0);
 
-				const face = new PIXI.Text(results[i], textStyle);
+				const face = new PIXI.Text({text:results[i],style: textStyle});
 				face.anchor.set(0.5); // Center the text
 				face.x = die.sprite.x;
 				face.y = die.sprite.y;
@@ -143,7 +146,7 @@ function attackedClick() {
 	while (dmgContainer.children[0]) {
 		dmgContainer.removeChild(dmgContainer.children[0]);
 	}
-	const damageTotal = new PIXI.Text(dmg, textStyle);
+	const damageTotal = new PIXI.Text({text:dmg, style:textStyle});
 	dmgContainer.addChild(damageTotal);
 
 }
@@ -202,3 +205,4 @@ function createAdventure() {
 	localStorage.setItem("player", JSON.stringify(player));
 	return JSON.stringify(player);
 }
+})();
