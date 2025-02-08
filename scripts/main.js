@@ -192,9 +192,9 @@ function calculateDmg(results) {
 
 function createAdventure() {
 	let dices = [];
-	dices.push("", 6, 0);
-	dices.push("", 6, 0);
-	dices.push("", 6, 0);
+	dices.push(Dice("", 6, 0));
+	dices.push(Dice("", 6, 0));
+	dices.push(Dice("", 6, 0));
 	const player = {
 		hp: 10,
 		money: 0,
