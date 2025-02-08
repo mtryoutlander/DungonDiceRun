@@ -4,7 +4,7 @@
 
 
 // Load saved data or initialize defaults
-const player = JSON.parse(localStorage.getItem('player') ? localStorage.getItem('player') : createAdventure());
+const player = JSON.parse(localStorage.getItem('player') !==null ? localStorage.getItem('player') : createAdventure());
 
 const app = new PIXI.Application();
 globalThis.__PIXI_APP__ = app;
@@ -25,8 +25,7 @@ dmgContainer.label = 'dmgUI';
 app.stage.addChild(dmgContainer);
 
 //custom objects
-function Dice(sprite, sides, face) {
-	this.sprite = sprite;
+function Dice( sides, face) {
 	this.sides = sides;
 	this.face = face;
 }
@@ -115,17 +114,17 @@ function drawDice(results) {
 
 		return PIXI.Assets.load(texturePath)
 			.then((texture) => {
-				die.sprite = new PIXI.Sprite(texture);
-				die.sprite.scale.set(0.25);
-				die.sprite.anchor.set(0.5);
-				die.sprite.position.set(i * 100, 0);
+				const dieSprite = new PIXI.Sprite(texture);
+				dieSprite.scale.set(0.25);
+				dieSprite.anchor.set(0.5);
+				dieSprite.position.set(i * 100, 0);
 
 				const face = new PIXI.Text({text:results[i],style: textStyle});
 				face.anchor.set(0.5); // Center the text
-				face.x = die.sprite.x;
-				face.y = die.sprite.y;
+				face.x = dieSprite.x;
+				face.y = dieSprite.y;
 
-				diceUiContainer.addChild(die.sprite);
+				diceUiContainer.addChild(dieSprite);
 				diceUiContainer.addChild(face);
 			})
 			.catch((err) => {
@@ -192,9 +191,9 @@ function calculateDmg(results) {
 
 function createAdventure() {
 	let dices = [];
-	dices.push(Dice("", 6, 0));
-	dices.push(Dice("", 6, 0));
-	dices.push(Dice("", 6, 0));
+	dices.push(new Dice(6, 0));
+	dices.push(new Dice(6, 0));
+	dices.push(new Dice(6, 0));
 	const player = {
 		hp: 10,
 		money: 0,
