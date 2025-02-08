@@ -13,6 +13,7 @@
     "vite": "^6.0.11"
   },
   "dependencies": {
+    "dungon-runner-project": "file:",
     "pixi.js": "^8.7.3"
   }
 }
