@@ -4,7 +4,7 @@
 
 
 // Load saved data or initialize defaults
-const player = JSON.parse(localStorage.getItem('player').length !=0 ? localStorage.getItem('player') : createAdventure());
+const player = JSON.parse(localStorage.getItem('player') ? localStorage.getItem('player') : createAdventure());
 
 const app = new PIXI.Application();
 globalThis.__PIXI_APP__ = app;
