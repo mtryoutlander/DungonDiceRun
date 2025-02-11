@@ -1,10 +1,10 @@
 //import { Application, Graphics, Text, TextStyle } from "pixi.js";  // will use onces packaging app 
 
 (async () => {
-
-
 	// Load saved data or initialize defaults
 	const player = JSON.parse(localStorage.getItem('player') !== null ? localStorage.getItem('player') : createAdventure());
+	const dungenLv = 0;
+	const dungenMap = generateDungonMap();
 
 	const app = new PIXI.Application();
 	globalThis.__PIXI_APP__ = app;
@@ -14,20 +14,67 @@
 	app.canvas.style.position = 'absolute';
 	document.body.appendChild(app.canvas);
 
+	//containers 
 	const diceUiContainer = new PIXI.Container();
 	diceUiContainer.position.set(screen.width / 5, screen.height - screen.height / 2);
 	diceUiContainer.label = 'diceUI';
-	app.stage.addChild(diceUiContainer);
 
 	const dmgContainer = new PIXI.Container();
 	dmgContainer.position.set(screen.width / 5, screen.height - screen.height / 2.25);
 	dmgContainer.label = 'dmgUI';
-	app.stage.addChild(dmgContainer);
 
 	const enemyContainer = new PIXI.Container();
 	enemyContainer.position.set(screen.width / 2, screen.height / 2);
 	enemyContainer.label = 'enemyContainer';
-	app.stage.addChild(enemyContainer);
+
+	const hub = new PIXI.Container();
+	hub.label = "hub";
+	hub.addChild(diceUiContainer);
+	hub.addChild(dmgContainer);
+	//add attack button to hub
+	PIXI.Assets.load('assets/attack-button.png')
+		.then((texture) => {
+			// Create a sprite from the loaded texture
+			const button = new PIXI.Sprite(texture);
+
+			//set the button size
+			button.scale = 0.5;
+
+			// Set the sprite's position
+			button.x = app.screen.width - button.width;
+			button.y = app.screen.height - button.height;
+
+			// Set the sprite's anchor point to the center
+			button.anchor.set(0.5);
+
+			// Enable interactivity for the sprite
+			button.eventMode = 'static'; // Makes the sprite interactive
+			button.cursor = 'pointer';  // Changes the cursor to a pointer when hovering over the sprite
+
+			// Add event listeners for interactivity
+			button.on('pointerdown', attackedClick);
+			hub.addChild(button);
+		}).catch((err) => {
+			console.error('Failed to load texture:', err);
+		});
+
+	const startMenu = new PIXI.Container();
+	startMenu.label = "startMenue";
+
+	const options = new PIXI.Container();
+	options.label = "optionMenue";
+
+	const createrCreater = new PIXI.Container();
+	createrCreater.label = "CCScean"; //createrCreater scean
+
+	const loot = new PIXI.Container();
+	loot.label = "lootPopup";  // popup after combat
+
+	const itemDes = new PIXI.Container();
+	itemDes.label = "itemDescption";
+
+	const shop = new PIXI.Container();
+	shop.label = "shop";
 
 	//custom objects
 	function Dice(sides, face) {
@@ -40,8 +87,6 @@
 		this.hp = hp;
 		this.attack = attack;
 	}
-
-
 	// Define a text style
 	const textStyle = new PIXI.TextStyle({
 		fontFamily: 'Arial',
@@ -55,36 +100,23 @@
 		dropShadowAngle: Math.PI / 6,
 		dropShadowDistance: 6,
 	});
+	function pause() { //renders the pause container
+		app.screen.addChild(options);
+	}
+	function unpause() {
+		app.screen.removeChild(options);
+	}
+	function mainMnue() { //the main menue
+
+	}
 	// Load the button texture
 	function startCombat() {
+		app.screen.addChild(enemyContainer);
+		app.screen.addChild(hub);
+	}
 
-
-
-		PIXI.Assets.load('assets/attack-button.png')
-			.then((texture) => {
-				// Create a sprite from the loaded texture
-				const button = new PIXI.Sprite(texture);
-
-				//set the button size
-				button.scale = 0.5;
-
-				// Set the sprite's position
-				button.x = app.screen.width - button.width;
-				button.y = app.screen.height - button.height;
-
-				// Set the sprite's anchor point to the center
-				button.anchor.set(0.5);
-
-				// Enable interactivity for the sprite
-				button.eventMode = 'static'; // Makes the sprite interactive
-				button.cursor = 'pointer';  // Changes the cursor to a pointer when hovering over the sprite
-
-				// Add event listeners for interactivity
-				button.on('pointerdown', attackedClick);
-				app.stage.addChild(button);
-			}).catch((err) => {
-				console.error('Failed to load texture:', err);
-			});
+	//genrates the dungeon map
+	function generateDungonMap() {
 
 	}
 	//Load enemy
