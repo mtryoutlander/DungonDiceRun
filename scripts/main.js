@@ -5,6 +5,7 @@
 	const player = JSON.parse(localStorage.getItem('player') !== null ? localStorage.getItem('player') : createAdventure());
 	const dungenLv = 0;
 	const dungenMap = generateDungonMap();
+	let isPaused = false;
 
 	const app = new PIXI.Application();
 	globalThis.__PIXI_APP__ = app;
@@ -24,7 +25,7 @@
 	dmgContainer.label = 'dmgUI';
 
 	const enemyContainer = new PIXI.Container();
-	enemyContainer.position.set(screen.width / 2, screen.height / 2);
+	enemyContainer.position.set(0, 0);
 	enemyContainer.label = 'enemyContainer';
 
 	const hub = new PIXI.Container();
@@ -32,37 +33,108 @@
 	hub.addChild(diceUiContainer);
 	hub.addChild(dmgContainer);
 	//add attack button to hub
-	PIXI.Assets.load('assets/attack-button.png')
-		.then((texture) => {
-			// Create a sprite from the loaded texture
-			const button = new PIXI.Sprite(texture);
+	const attackButton = createButton('Attack', 400, () => {
+		//logic for the attack button
+		attackedClick();
+	})
+	hub.addChild(attackButton);
+	hub.position.set(0, 0);
 
-			//set the button size
-			button.scale = 0.5;
-
-			// Set the sprite's position
-			button.x = app.screen.width - button.width;
-			button.y = app.screen.height - button.height;
-
-			// Set the sprite's anchor point to the center
-			button.anchor.set(0.5);
-
-			// Enable interactivity for the sprite
-			button.eventMode = 'static'; // Makes the sprite interactive
-			button.cursor = 'pointer';  // Changes the cursor to a pointer when hovering over the sprite
-
-			// Add event listeners for interactivity
-			button.on('pointerdown', attackedClick);
-			hub.addChild(button);
-		}).catch((err) => {
-			console.error('Failed to load texture:', err);
-		});
 
 	const startMenu = new PIXI.Container();
 	startMenu.label = "startMenue";
+	const startButton = createButton('Start', 200, () => {
+		console.log('Start Game!');
+		startCombat();
+	});
+	startMenu.addChild(startButton);
+
+	// Create Options Button
+	const optionsButton = createButton('Options', 300, () => {
+		console.log('Options Menu!');
+		// Add your options menu logic here
+		pause();
+	});
+	startMenu.addChild(optionsButton);
+
+	// Create Exit Button
+	const exitButton = createButton('Exit', 400, () => {
+		console.log('Exiting Game!');
+		window.close(); // Note: This may not work in all browsers due to security restrictions
+	});
+	startMenu.addChild(exitButton);
 
 	const options = new PIXI.Container();
 	options.label = "optionMenue";
+	// Create a dark transparent overlay
+	const overlay = new PIXI.Graphics();
+	overlay.beginFill(0x000000, 0.7); // Black color with 70% opacity
+	overlay.drawRect(0, 0, app.screen.width, app.screen.height);
+	overlay.endFill();
+	options.addChild(overlay);
+
+	// Create a black box in the center of the screen
+	const centerBoxWidth = app.screen.width / 2;
+	const centerBoxHeight = app.screen.height;
+	const centerBox = new PIXI.Graphics();
+	centerBox.beginFill(0x000000); // Black color
+	centerBox.drawRect(
+		(app.screen.width - centerBoxWidth) / 2, 0, centerBoxWidth, centerBoxHeight
+	);
+	centerBox.endFill();
+	options.addChild(centerBox);
+
+	const backButton = createButton('Back', 400, () => {
+		unpause()
+	});
+	options.addChild(backButton);
+
+	// Create a volume slider
+	const sliderWidth = 200;
+	const sliderHeight = 10;
+	const slider = new PIXI.Graphics();
+	slider.beginFill(0xcccccc); // Light gray color
+	slider.drawRect(
+		(app.screen.width - sliderWidth) / 2,
+		(app.screen.height - sliderHeight) / 2,
+		sliderWidth,
+		sliderHeight
+	);
+	slider.endFill();
+	options.addChild(slider);
+
+	const sliderButton = new PIXI.Graphics();
+	sliderButton.beginFill(0xffffff); // White color
+	sliderButton.drawCircle(0, 0, 10); // Circle for the slider button
+	sliderButton.endFill();
+	sliderButton.x = (app.screen.width - sliderWidth) / 2;
+	sliderButton.y = (app.screen.height - sliderHeight) / 2;
+	sliderButton.interactive = true;
+	sliderButton.buttonMode = true;
+	options.addChild(sliderButton);
+	let isDragging = false;
+	sliderButton.on('pointerdown', () => {
+		isDragging = true;
+	});
+	sliderButton.on('pointerup', () => {
+		isDragging = false;
+	});
+	sliderButton.on('pointerupoutside', () => {
+		isDragging = false;
+	});
+	sliderButton.on('pointermove', (event) => {
+		if (isDragging) {
+			const newX = event.data.global.x;
+			const minX = (app.screen.width - sliderWidth) / 2;
+			const maxX = minX + sliderWidth;
+			sliderButton.x = Math.min(Math.max(newX, minX), maxX);
+
+			// Calculate volume based on slider position
+			const volume = (sliderButton.x - minX) / sliderWidth;
+			console.log('Volume:', volume);
+			// Add your volume control logic here
+		}
+	});
 
 	const createrCreater = new PIXI.Container();
 	createrCreater.label = "CCScean"; //createrCreater scean
@@ -76,6 +148,7 @@
 	const shop = new PIXI.Container();
 	shop.label = "shop";
 
+	mainMenue();
 	//custom objects
 	function Dice(sides, face) {
 		this.sides = sides;
@@ -100,19 +173,53 @@
 		dropShadowAngle: Math.PI / 6,
 		dropShadowDistance: 6,
 	});
+
+	// Function to create a button
+	function createButton(text, yPosition, onClick) {
+		const button = new PIXI.Text({
+			text: text, style: {
+				fontFamily: 'Arial',
+				fontSize: 36,
+				fill: 0xffffff,
+				align: 'center',
+			}
+		});
+		button.interactive = true;
+		button.buttonMode = true;
+		button.anchor.set(0.5);
+		button.position.set(app.screen.width / 2, yPosition);
+
+		// Add event listeners
+		button.on('pointerdown', onClick);
+		button.on('pointerover', () => (button.tint = 0xaaaaaa));
+		button.on('pointerout', () => (button.tint = 0xffffff));
+
+		return button;
+	}
+
+	// Create Start Button
+
 	function pause() { //renders the pause container
-		app.screen.addChild(options);
+		app.stage.addChild(options);
+		isPaused = true;
 	}
 	function unpause() {
-		app.screen.removeChild(options);
+		app.stage.removeChild(options);
+		isPaused = false;
 	}
-	function mainMnue() { //the main menue
-
+	function mainMenue() { //the main menue
+		app.stage.addChild(startMenu);
 	}
 	// Load the button texture
 	function startCombat() {
-		app.screen.addChild(enemyContainer);
-		app.screen.addChild(hub);
+		while (app.stage.children[0]) {
+			app.stage.removeChild(app.stage.children[0]);
+		}
+		const enemies = [];
+		enemies.push(new Enemy('goblin', 10, 1));
+		loadEnemy(enemies);
+		app.stage.addChild(enemyContainer);
+		app.stage.addChild(hub);
 	}
 
 	//genrates the dungeon map
@@ -121,14 +228,15 @@
 	}
 	//Load enemy
 	function loadEnemy(enemies) {
-		const loadPromises = enemies.map((name, i) => {
+		const loadPromises = enemies.map((enemy, i) => {
 			let texturePath;
-			switch (name) {
-				case "":
+			console.log(enemy.name + " the enemy name");
+			switch (enemy.name) {
+				case 'goblin':
 					texturePath = 'assets/goblinTestEnemy.jpg';
 					break;
 				default:
-					console.error(`Unsupported enemy type: ${enemies.name}`);
+					console.error(`Unsupported enemy type: ${enemy.name}`);
 					return Promise.resolve();
 			}
 			return PIXI.Assets.load(texturePath)
@@ -137,8 +245,8 @@
 					enemy.label = name;
 					enemy.scale = 0.5;
 					enemy.anchor.set(0.5);
-					enemy.x = enemyContainer.x - enemy.width * i;
-					enemy.y = enemyContainer.y - enemy.height / 2;
+					enemy.x = enemyContainer.x + enemy.width * (i + 1);
+					enemy.y = enemyContainer.y + enemy.height / 2;
 					enemyContainer.addChild(enemy);
 
 				}).catch((err) => {
@@ -270,4 +378,49 @@
 		localStorage.setItem("player", JSON.stringify(player));
 		return JSON.stringify(player);
 	}
+
+	// Handle window resizing
+	window.addEventListener('resize', () => {
+		app.renderer.resize(window.innerWidth, window.innerHeight);
+		overlay.clear();
+		overlay.beginFill(0x000000, 0.7);
+		overlay.drawRect(0, 0, app.screen.width, app.screen.height);
+		overlay.endFill();
+
+		centerBox.clear();
+		centerBox.beginFill(0x000000);
+		centerBox.drawRect(
+			(app.screen.width - centerBoxWidth) / 2,
+			(app.screen.height - centerBoxHeight) / 2,
+			centerBoxWidth,
+			centerBoxHeight
+		);
+		centerBox.endFill();
+
+		backButton.x = (app.screen.width - backButton.width) / 2;
+		backButton.y = (app.screen.height - centerBoxHeight) / 2 + 20;
+
+		slider.clear();
+		slider.beginFill(0xcccccc);
+		slider.drawRect(
+			(app.screen.width - sliderWidth) / 2,
+			(app.screen.height - sliderHeight) / 2 + 80,
+			sliderWidth,
+			sliderHeight
+		);
+		slider.endFill();
+
+		sliderButton.x = (app.screen.width - sliderWidth) / 2;
+		sliderButton.y = (app.screen.height - sliderHeight) / 2 + 80;
+	});
+	//key press event listener
+	window.addEventListener('keydown', (event) => {
+		if (event.key === 'p' || event.key === 'P') {
+			if (!isPaused) {
+				pause();
+			} else {
+				unpause();
+			}
+		}
+	});
 })();
