@@ -7,6 +7,20 @@
 	const dungenMap = generateDungonMap();
 	let isPaused = false;
 
+	// Define a text style
+	const textStyle = new PIXI.TextStyle({
+		fontFamily: 'Arial',
+		fontSize: 36,
+		fill: 0xff1010, // Red color
+		align: 'center',
+		stroke: 0x000000, // Black stroke
+		dropShadow: true,
+		dropShadowColor: 0x000000,
+		dropShadowBlur: 4,
+		dropShadowAngle: Math.PI / 6,
+		dropShadowDistance: 6,
+	});
+
 	const app = new PIXI.Application();
 	globalThis.__PIXI_APP__ = app;
 	await app.init({
@@ -17,8 +31,31 @@
 
 	//containers 
 	const diceUiContainer = new PIXI.Container();
-	diceUiContainer.position.set(screen.width / 5, screen.height - screen.height / 2);
 	diceUiContainer.label = 'diceUI';
+	const bagBackground = new PIXI.Graphics();
+	bagBackground.beginFill(0xF5F5DC, 0.8); // sand color with 80% opacity
+	bagBackground.drawRect(app.screen.width - app.screen.width / 3, app.screen.height / 2, 200, 200);
+	bagBackground.endFill();
+	diceUiContainer.addChild(bagBackground);
+	let diceInBag = new PIXI.Text({ text: 'Bag: ' + player.dice.length, style: textStyle });
+	diceInBag.position.set((app.screen.width - app.screen.width / 3) + 50, app.screen.height / 2);
+	diceUiContainer.addChild(diceInBag);
+	const currentRoll = new PIXI.Graphics();
+	currentRoll.beginFill(0xB2BEB5, 0.8); // ash grey color with 80% opacity
+	currentRoll.drawRect(app.screen.width - app.screen.width / 3 - 600, app.screen.height / 2, 400, 300);
+	currentRoll.endFill();
+	diceUiContainer.addChild(currentRoll);
+	const bank = new PIXI.Graphics();
+	bank.beginFill(0x7393B3, 0.8); // blue grey color with 80% opacity
+	bank.drawRect(300, app.screen.height / 2, 300, 300);
+	bank.endFill();
+	diceUiContainer.addChild(bank);
+	let bankLabel = new PIXI.Text({ text: 'Store Dice', style: textStyle });
+	bankLabel.position.set(400, app.screen.height / 2);
+	diceUiContainer.addChild(bankLabel);
+
+
+
 
 	const dmgContainer = new PIXI.Container();
 	dmgContainer.position.set(screen.width / 5, screen.height - screen.height / 2.25);
@@ -33,24 +70,68 @@
 	hub.addChild(diceUiContainer);
 	hub.addChild(dmgContainer);
 	//add attack button to hub
-	const attackButton = createButton('Attack', 400, () => {
+	const attackButton = createButton('Attack', app.screen.width / 4, 400, () => {
 		//logic for the attack button
 		attackedClick();
 	})
 	hub.addChild(attackButton);
-	hub.position.set(0, 0);
+	const rollButton = createButton('Roll', app.screen.width * 3 / 4, 400, () => {
+		//roll dice
+	})
+	hub.addChild(rollButton);
+	const storeButton = createButton('store', app.screen.width / 2, 400, () => {
+		//store dice
+	})
+	hub.addChild(storeButton);
+
+	// Create a container for the health bar and text
+	const healthBarContainer = new PIXI.Container();
+	app.stage.addChild(healthBarContainer);
+
+	// Create the health bar background (gray)
+	const healthBarBackground = new PIXI.Graphics();
+	healthBarBackground.beginFill(0x808080); // Gray color
+	healthBarBackground.drawRect(0, 0, 200, 20); // Width: 200, Height: 20
+	healthBarBackground.endFill();
+	healthBarContainer.addChild(healthBarBackground);
+
+	// Create the health bar (green)
+	const healthBar = new PIXI.Graphics();
+	healthBar.beginFill(0x00FF00); // Green color
+	healthBar.drawRect(0, 0, 200, 20); // Width: 200, Height: 20
+	healthBar.endFill();
+	healthBarContainer.addChild(healthBar);
+
+	// Create the health text
+	const healthText = new PIXI.Text('HP: 10 / 10', {
+		fontFamily: 'Arial',
+		fontSize: 18,
+		fill: 0xFFFFFF,
+		align: 'center'
+	});
+	healthText.x = 0;
+	healthText.y = 25; // Position below the health bar
+	healthBarContainer.addChild(healthText);
+
+	// Position the health bar container
+	healthBarContainer.x = 25;
+	healthBarContainer.y = 400;
+
+	hub.addChild(healthBarContainer);
+	//hud postion will move everything on the hud
+	hub.position.set(app.screen.width / 6, app.screen.height / 6);
 
 
 	const startMenu = new PIXI.Container();
-	startMenu.label = "startMenue";
-	const startButton = createButton('Start', 200, () => {
+	startMenu.label = "startMenue" - app.screen.width / 2;
+	const startButton = createButton('Start', app.screen.width / 2, 200, () => {
 		console.log('Start Game!');
 		startCombat();
 	});
 	startMenu.addChild(startButton);
 
 	// Create Options Button
-	const optionsButton = createButton('Options', 300, () => {
+	const optionsButton = createButton('Options', app.screen.width / 2, 300, () => {
 		console.log('Options Menu!');
 		// Add your options menu logic here
 		pause();
@@ -58,7 +139,7 @@
 	startMenu.addChild(optionsButton);
 
 	// Create Exit Button
-	const exitButton = createButton('Exit', 400, () => {
+	const exitButton = createButton('Exit', app.screen.width / 2, 400, () => {
 		console.log('Exiting Game!');
 		window.close(); // Note: This may not work in all browsers due to security restrictions
 	});
@@ -84,7 +165,7 @@
 	centerBox.endFill();
 	options.addChild(centerBox);
 
-	const backButton = createButton('Back', 400, () => {
+	const backButton = createButton('Back', app.screen.width / 2, 400, () => {
 		unpause()
 	});
 	options.addChild(backButton);
@@ -160,22 +241,20 @@
 		this.hp = hp;
 		this.attack = attack;
 	}
-	// Define a text style
-	const textStyle = new PIXI.TextStyle({
-		fontFamily: 'Arial',
-		fontSize: 36,
-		fill: 0xff1010, // Red color
-		align: 'center',
-		stroke: 0x000000, // Black stroke
-		dropShadow: true,
-		dropShadowColor: 0x000000,
-		dropShadowBlur: 4,
-		dropShadowAngle: Math.PI / 6,
-		dropShadowDistance: 6,
-	});
+
+
+	// Function to update the health bar and text
+	function updateHealthBar(currentHealth, maxHealth) {
+		const healthPercentage = currentHealth / maxHealth;
+		healthBar.width = 200 * healthPercentage; // Scale the health bar width
+
+		// Update the health text
+		healthText.text = `HP: ${currentHealth} / ${maxHealth}`;
+	}
+
 
 	// Function to create a button
-	function createButton(text, yPosition, onClick) {
+	function createButton(text, xPostion, yPosition, onClick) {
 		const button = new PIXI.Text({
 			text: text, style: {
 				fontFamily: 'Arial',
@@ -187,7 +266,7 @@
 		button.interactive = true;
 		button.buttonMode = true;
 		button.anchor.set(0.5);
-		button.position.set(app.screen.width / 2, yPosition);
+		button.position.set(xPostion, yPosition);
 
 		// Add event listeners
 		button.on('pointerdown', onClick);
@@ -216,7 +295,10 @@
 			app.stage.removeChild(app.stage.children[0]);
 		}
 		const enemies = [];
-		enemies.push(new Enemy('goblin', 10, 1));
+		let attack = [];
+		attack.push(new Dice(6, 0));
+		attack.push(new Dice(6, 0));
+		enemies.push(new Enemy('goblin', 32, attack));
 		loadEnemy(enemies);
 		app.stage.addChild(enemyContainer);
 		app.stage.addChild(hub);
@@ -241,13 +323,40 @@
 			}
 			return PIXI.Assets.load(texturePath)
 				.then((texture) => {
-					const enemy = new PIXI.Sprite(texture);
-					enemy.label = name;
-					enemy.scale = 0.5;
-					enemy.anchor.set(0.5);
-					enemy.x = enemyContainer.x + enemy.width * (i + 1);
-					enemy.y = enemyContainer.y + enemy.height / 2;
-					enemyContainer.addChild(enemy);
+					let enemyImage = new PIXI.Graphics();
+					enemyImage.beginFill(0xFF0000); //  red color 
+					enemyImage.drawRect(enemyContainer.x + 200 * (i + 1), enemyContainer.y + 100, 200, 200);
+					enemyImage.endFill();
+					enemyImage.label = enemy.name;
+					enemyContainer.addChild(enemyImage);
+					// Create the health bar background (gray)
+					let healthBarBackground = new PIXI.Graphics();
+					healthBarBackground.beginFill(0x808080); // Gray color
+					healthBarBackground.drawRect(enemyContainer.x + 200 * (i + 1), enemyContainer.y + 100, 200, 20); // Width: 200, Height: 20
+					healthBarBackground.endFill();
+					enemyContainer.addChild(healthBarBackground);
+
+					// Create the health bar (green)
+					let healthBar = new PIXI.Graphics();
+					healthBar.beginFill(0x00FF00); // Green color
+					healthBar.drawRect(enemyContainer.x + 200 * (i + 1), enemyContainer.y + 100, 200, 20); // Width: 200, Height: 20
+					healthBar.endFill();
+					enemyContainer.addChild(healthBar);
+
+					// Create the health text
+					let healthText = new PIXI.Text({
+						text: `HP: ${enemy.hp} / ${enemy.hp}`, style: {
+							fontFamily: 'Arial',
+							fontSize: 18,
+							fill: 0xFFFFFF,
+							align: 'center'
+						}
+					});
+					healthText.x = enemyContainer.x + 200 * (i + 1);
+					healthText.y = enemyContainer.y + 125; // Position below the health bar
+					enemyContainer.addChild(healthText);
+
+
 
 				}).catch((err) => {
 					console.error('Failed to load texture:', err);
@@ -368,11 +477,14 @@
 		dices.push(new Dice(6, 0));
 		dices.push(new Dice(6, 0));
 		dices.push(new Dice(6, 0));
+		dices.push(new Dice(6, 0));
+		dices.push(new Dice(6, 0));
+		dices.push(new Dice(6, 0));
 		const player = {
 			hp: 10,
 			money: 0,
 			enemiesDefeated: 0,
-			dice: dices
+			dice: dices,
 		}
 
 		localStorage.setItem("player", JSON.stringify(player));
