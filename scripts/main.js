@@ -1,10 +1,10 @@
 //import { Application, Graphics, Text, TextStyle } from "pixi.js";  // will use onces packaging app 
-
 (async () => {
 	// Load saved data or initialize defaults
 	const player = JSON.parse(localStorage.getItem('player') !== null ? localStorage.getItem('player') : createAdventure());
 	const dungenLv = 0;
 	const dungenMap = generateDungonMap();
+	let storeDice = [], selectedMonster = null, selectedDice = [], currentlyRolled = [];
 	let isPaused = false;
 
 	// Define a text style
@@ -40,11 +40,11 @@
 	let diceInBag = new PIXI.Text({ text: 'Bag: ' + player.dice.length, style: textStyle });
 	diceInBag.position.set((app.screen.width - app.screen.width / 3) + 50, app.screen.height / 2);
 	diceUiContainer.addChild(diceInBag);
-	const currentRoll = new PIXI.Graphics();
-	currentRoll.beginFill(0xB2BEB5, 0.8); // ash grey color with 80% opacity
-	currentRoll.drawRect(app.screen.width - app.screen.width / 3 - 600, app.screen.height / 2, 400, 300);
-	currentRoll.endFill();
-	diceUiContainer.addChild(currentRoll);
+	const currentRollBackground = new PIXI.Graphics();
+	currentRollBackground.beginFill(0xB2BEB5, 0.8); // ash grey color with 80% opacity
+	currentRollBackground.drawRect(app.screen.width - app.screen.width / 3 - 600, app.screen.height / 2, 400, 300);
+	currentRollBackground.endFill();
+	diceUiContainer.addChild(currentRollBackground);
 	const bank = new PIXI.Graphics();
 	bank.beginFill(0x7393B3, 0.8); // blue grey color with 80% opacity
 	bank.drawRect(300, app.screen.height / 2, 300, 300);
@@ -72,15 +72,29 @@
 	//add attack button to hub
 	const attackButton = createButton('Attack', app.screen.width / 4, 400, () => {
 		//logic for the attack button
-		attackedClick();
+		attack(storeDice, currentlyRolled);
+		player.dice = player.dice.concat(currentlyRolled);
+		player.dice = player.dice.concat(storeDice);
+		currentlyRolled = [];
+		storeDice = [];
+		eraseDice('all');
 	})
 	hub.addChild(attackButton);
 	const rollButton = createButton('Roll', app.screen.width * 3 / 4, 400, () => {
 		//roll dice
+		currentlyRolled = roll(player.rollSize);
+		console.log(currentlyRolled);
+		drawDice(currentlyRolled, 'current');
 	})
 	hub.addChild(rollButton);
 	const storeButton = createButton('store', app.screen.width / 2, 400, () => {
 		//store dice
+		storeDice = selectedDice;
+		drawDice(storeDice, 'stored');
+		currentlyRolled = removeSelectedFromCurrent(currentlyRolled, selectedDice);
+		player.dice = player.dice.concat(currentlyRolled);
+		currentlyRolled = [];
+		eraseDice('current');
 	})
 	hub.addChild(storeButton);
 
@@ -289,6 +303,91 @@
 	function mainMenue() { //the main menue
 		app.stage.addChild(startMenu);
 	}
+
+	function roll(numberOfDiceToRoll) {
+		let diceOutOfBag = [];
+		if (player.dice.length < numberOfDiceToRoll)
+			numberOfDiceToRoll = player.dice.length;
+		for (let i = 0; i < numberOfDiceToRoll; i++) {
+			let index = Math.floor(Math.random() * player.dice.length - 1);
+			diceOutOfBag.push(player.dice[index]);
+			player.dice.splice(index, 1);
+		}
+		return rollDices(diceOutOfBag);
+	}
+	function rollDices(diceOutOfBag) {
+		diceOutOfBag.forEach((die) => {
+			die.side = Math.floor(Math.random() * die.sides) + 1;
+		});
+
+		return (diceOutOfBag);
+
+	}
+
+	const removeSelectedFromCurrent = (total, selected) => {
+		return total.filter(item =>
+			!selected.some(selectedItem =>
+				JSON.stringify(selectedItem) === JSON.stringify(item)
+			)
+		);
+	};
+
+	function drawDice(dice, place) {
+		let diceTextStyle = new PIXI.TextStyle({
+			fontFamily: 'Arial',
+			fontSize: 16,
+			fill: 0xffff, // white color
+			align: 'center',
+			stroke: 0x000000, // Black stroke
+		});
+		let postionX, postionY;
+		switch (place) {
+			case 'current':
+				postionX = currentRollBackground.x + 10;
+				postionY = currentRollBackground.y + 20;
+				break;
+			case 'bank':
+				postionX = bank.x + 10;
+				postionY = bank.y + 20
+				break;
+
+		}
+		dice.forEach((die, i = 0) => {
+			let face = new PIXI.Text({
+				text: die.face, style: diceTextStyle
+			});
+			face.x = postionX + i * 10;
+			face.y = postionY + (i / 4) * 10;
+			i++;
+			face.label = place;
+			diceUiContainer.addChild(face);
+
+		})
+	}
+	function eraseDice(place) {
+		let diceToRemove = [];
+		switch (place) {
+			case 'current':
+				//finds all the dice 
+				diceToRemove = diceUiContainer.querySelectorAll('[label="current"]');
+				// Remove each child
+				diceToRemove.forEach(child => {
+					diceUiContainer.removeChild(child);
+				});
+				break;
+			case 'all':
+				//finds all the dice 
+				diceToRemove = diceUiContainer.querySelectorAll('[label="current"]');
+				diceToRemove.concat(diceUiContainer.querySelectorAll('[label="bank"]'))
+				// Remove each child
+				diceToRemove.forEach(child => {
+					diceUiContainer.removeChild(child);
+				});
+				break;
+
+		}
+	}
+
 	// Load the button texture
 	function startCombat() {
 		while (app.stage.children[0]) {
@@ -369,57 +468,6 @@
 
 	}
 
-	function drawDice(results) {
-		// Remove all prior loaded dice if there are any
-		while (diceUiContainer.children[0]) {
-			diceUiContainer.removeChild(diceUiContainer.children[0]);
-		}
-		// Load Dice 
-		const loadPromises = player.dice.map((die, i) => {
-			let texturePath;
-			switch (die.sides) {
-				case 4:
-					texturePath = 'assets/D4.png';
-					break;
-				case 6:
-					texturePath = 'assets/D6.png';
-					break;
-				case 8:
-					texturePath = 'assets/D8.png';
-					break;
-				case 10:
-					texturePath = 'assets/D10.png';
-					break;
-				default:
-					console.error(`Unsupported dice type: ${die.sides}`);
-					return Promise.resolve();
-			}
-
-			return PIXI.Assets.load(texturePath)
-				.then((texture) => {
-					const dieSprite = new PIXI.Sprite(texture);
-					dieSprite.scale.set(0.25);
-					dieSprite.anchor.set(0.5);
-					dieSprite.position.set(i * 100, 0);
-
-					const face = new PIXI.Text({ text: results[i], style: textStyle });
-					face.anchor.set(0.5); // Center the text
-					face.x = dieSprite.x;
-					face.y = dieSprite.y;
-
-					diceUiContainer.addChild(dieSprite);
-					diceUiContainer.addChild(face);
-				})
-				.catch((err) => {
-					console.error('Failed to load texture:', err);
-				});
-		});
-
-		// Wait for all dice to load
-		Promise.all(loadPromises).then(() => {
-			console.log('All dice loaded:', diceUiContainer.children);
-		});
-	}
 	function attackedClick() {
 		let results = rollDices();  // makes an array of dice values
 		let dmg = calculateDmg(results); //adds those dice values together 
@@ -433,20 +481,7 @@
 
 	}
 
-	function rollDices() {
-		const results = [];
-		player.dice.forEach((die) => {
-			results.push(roll(die));
-		});
 
-		return (results);
-
-	}
-
-	function roll(die) {
-		const randomIndex = Math.floor(Math.random() * die.sides);
-		return (randomIndex + 1);
-	}
 
 	function calculateDmg(results) {
 		const numberMap = new Map();
@@ -485,6 +520,7 @@
 			money: 0,
 			enemiesDefeated: 0,
 			dice: dices,
+			rollSize: 3
 		}
 
 		localStorage.setItem("player", JSON.stringify(player));
@@ -536,3 +572,59 @@
 		}
 	});
 })();
+
+
+/*
+	function drawDice(results) {
+		// Remove all prior loaded dice if there are any
+		while (diceUiContainer.children[0]) {
+			diceUiContainer.removeChild(diceUiContainer.children[0]);
+		}
+		// Load Dice 
+		const loadPromises = player.dice.map((die, i) => {
+			let texturePath;
+			switch (die.sides) {
+				case 4:
+					texturePath = 'assets/D4.png';
+					break;
+				case 6:
+					texturePath = 'assets/D6.png';
+					break;
+				case 8:
+					texturePath = 'assets/D8.png';
+					break;
+				case 10:
+					texturePath = 'assets/D10.png';
+					break;
+				default:
+					console.error(`Unsupported dice type: ${die.sides}`);
+					return Promise.resolve();
+			}
+
+			return PIXI.Assets.load(texturePath)
+				.then((texture) => {
+					const dieSprite = new PIXI.Sprite(texture);
+					dieSprite.scale.set(0.25);
+					dieSprite.anchor.set(0.5);
+					dieSprite.position.set(i * 100, 0);
+
+					const face = new PIXI.Text({ text: results[i], style: textStyle });
+					face.anchor.set(0.5); // Center the text
+					face.x = dieSprite.x;
+					face.y = dieSprite.y;
+
+					diceUiContainer.addChild(dieSprite);
+					diceUiContainer.addChild(face);
+				})
+				.catch((err) => {
+					console.error('Failed to load texture:', err);
+				});
+		});
+
+		// Wait for all dice to load
+		Promise.all(loadPromises).then(() => {
+			console.log('All dice loaded:', diceUiContainer.children);
+		});
+	}
+
+	*/
