@@ -30,15 +30,10 @@
 	// Define a text style
 	const textStyle = new PIXI.TextStyle({
 		fontFamily: 'Arial',
-		fontSize: 36,
+		fontSize: scale *50,
 		fill: 0xff1010, // Red color
 		align: 'center',
 		stroke: 0x000000, // Black stroke
-		dropShadow: true,
-		dropShadowColor: 0x000000,
-		dropShadowBlur: 4,
-		dropShadowAngle: Math.PI / 6,
-		dropShadowDistance: 6,
 	});
 
 	//Event binding 
@@ -49,15 +44,21 @@
 	const diceUiContainer = new PIXI.Container();
 	diceUiContainer.label = 'diceUI';
 	//bag sprite
-	const bagSprite = new PIXI.Sprite('assets/DiceBag.png');
-	bagSprite.x= app.screen.width - app.screen.width / 3 +scale;
-	bagSprite.y =  app.screen.height / 2+scale;
-	bagSprite.scale = scale;
-	bagSprite.label ="bagSprite";
-	diceUiContainer.addChild(bagSprite);
-	let diceInBag = new PIXI.Text({ text: 'Bag: ' + player.dice.length, style: textStyle });
-	diceInBag.position.set((app.screen.width - app.screen.width / 3) + 50+scale, app.screen.height / 2+scale);
-	diceUiContainer.addChild(diceInBag);
+	PIXI.Assets.load('assets/DiceBag.png').then((texture) => {
+		const bagSprite = new PIXI.Sprite(texture);
+		console.log(bagSprite.width, bagSprite.height); // Should now have valid dimensions
+		bagSprite.x= app.screen.width - app.screen.width / 3 +scale;
+		bagSprite.y =  app.screen.height / 2+scale;
+		bagSprite.scale = scale;
+		bagSprite.label ="bagSprite";
+		diceUiContainer.addChild(bagSprite);
+		let diceInBag = new PIXI.Text({ text: 'Bag: ' + player.dice.length, style: textStyle });
+		diceInBag.position.set(bagSprite.x+bagSprite.width/4,bagSprite.y+bagSprite.height/2)
+		diceUiContainer.addChild(diceInBag);
+	}).catch((error) => {
+		console.error("Failed to load texture:", error);
+	});
+
 	const currentRollBackground = new PIXI.Graphics();
 	currentRollBackground.beginFill(0xB2BEB5, 0.8); // ash grey color with 80% opacity
 	currentRollBackground.drawRect(app.screen.width - app.screen.width * 2/3+scale, app.screen.height / 2+scale, 400*scale, 300*scale);
@@ -156,14 +157,14 @@
 
 	const startMenu = new PIXI.Container();
 	startMenu.label = "startMenue";
-	const startButton = createButton('Start', app.screen.width / 2, 200, () => {
+	const startButton = createButton('Start', app.screen.width / 2, app.screen.height/5, () => {
 		console.log('Start Game!');
 		startCombat();
 	});
 	startMenu.addChild(startButton);
 
 	// Create Options Button
-	const optionsButton = createButton('Options', app.screen.width / 2, 300, () => {
+	const optionsButton = createButton('Options', app.screen.width / 2, app.screen.height*2/5, () => {
 		console.log('Options Menu!');
 		// Add your options menu logic here
 		pause();
@@ -171,7 +172,7 @@
 	startMenu.addChild(optionsButton);
 
 	// Create Exit Button
-	const exitButton = createButton('Exit', app.screen.width / 2, 400, () => {
+	const exitButton = createButton('Exit', app.screen.width / 2, app.screen.height*4/5, () => {
 		console.log('Exiting Game!');
 		window.close(); // Note: This may not work in all browsers due to security restrictions
 	});
@@ -291,7 +292,7 @@
 		const button = new PIXI.Text({
 			text: text, style: {
 				fontFamily: 'Arial',
-				fontSize: 36,
+				fontSize: Math.min(36 *scale*10, 64),
 				fill: 0xffffff,
 				align: 'center',
 			}
@@ -308,8 +309,6 @@
 
 		return button;
 	}
-
-	// Create Start Button
 
 	function pause() { //renders the pause container
 		app.stage.addChild(options);
