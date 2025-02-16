@@ -335,7 +335,7 @@
 	}
 	function rollDices(diceOutOfBag) {
 		diceOutOfBag.forEach((die) => {
-			die.side = Math.floor(Math.random() * die.sides) + 1;
+			die.face = Math.floor(Math.random() * die.sides) + 1;
 		});
 
 		return (diceOutOfBag);
@@ -358,15 +358,13 @@
 			align: 'center',
 			stroke: 0x000000, // Black stroke
 		});
-		let postionX, postionY;
+		let position;
 		switch (place) {
 			case 'current':
-				postionX = currentRollBackground.x + 10;
-				postionY = currentRollBackground.y + 20;
+				position = currentRollBackground;
 				break;
 			case 'bank':
-				postionX = bank.x + 10;
-				postionY = bank.y + 20
+				position = bank;
 				break;
 
 		}
@@ -374,11 +372,11 @@
 			let face = new PIXI.Text({
 				text: die.face, style: diceTextStyle
 			});
-			face.x = postionX + i * 10;
-			face.y = postionY + (i / 4) * 10;
+			face.x =  position.x + i * 10 *scale;
+			face.x = position.y + (i *10*scale)/3;
 			i++;
 			face.label = place;
-			diceUiContainer.addChild(face);
+			position.addChild(face);
 
 		})
 	}
