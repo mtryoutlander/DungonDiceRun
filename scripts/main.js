@@ -28,7 +28,7 @@ const texturesPromise = PIXI.Assets.load(['d4', 'd6', 'd8', 'd10', 'bag']);
 const player = JSON.parse(localStorage.getItem('player') !== null ? localStorage.getItem('player') : createAdventure());
 const dungenLv = 0;
 const dungenMap = generateDungonMap();
-let storeDice = [], selectedMonster = null, selectedDice = [], currentlyRolled = [];
+let storedDice = [], selectedMonster = null, selectedDice = [], currentlyRolled = [], dmgTotal;
 let isPaused = false;
 
 
@@ -59,6 +59,7 @@ texturesPromise.then((textures) => {
 	diceUiContainer.addChild(bagSprite);
 	let diceInBag = new PIXI.Text({ text: 'Bag: ' + player.dice.length, style: textStyle });
 	diceInBag.position.set(bagSprite.x + bagSprite.width / 4, bagSprite.y + bagSprite.height / 2)
+	diceInBag.label = "diceBagNum";
 	diceUiContainer.addChild(diceInBag);
 });
 
@@ -94,7 +95,7 @@ hub.label = "hub";
 hub.addChild(diceUiContainer);
 hub.addChild(dmgContainer);
 //add attack button to hub
-const attackButton = createButton('Attack', app.screen.width / 4, app.screen.height * 2 / 5, () => {
+const attackButton = createButton('Attack', app.screen.width * 3 / 4 * scale, app.screen.height * 1 / 8 * scale, () => {
 	//logic for the attack button
 	attack(storeDice, currentlyRolled);
 	player.dice = player.dice.concat(currentlyRolled);
@@ -102,16 +103,19 @@ const attackButton = createButton('Attack', app.screen.width / 4, app.screen.hei
 	currentlyRolled = [];
 	storeDice = [];
 	eraseDice('all');
-})
+});
 hub.addChild(attackButton);
-const rollButton = createButton('Roll', app.screen.width * 3 / 4, app.screen.height * 2 / 5, () => {
+const rollButton = createButton('Roll', app.screen.width * 3 / 4 * scale, app.screen.height * 2 / 7 * scale, () => {
 	//roll dice
+	eraseDice('current');
+	player.dice = player.dice.concat(currentlyRolled);
 	currentlyRolled = roll(player.rollSize);
 	console.log(currentlyRolled);
 	drawDice(currentlyRolled, 'current');
-})
+	diceUiContainer.children.find((element) => element.label == 'diceBagNum').text = "Bag: " + player.dice.length;
+});
 hub.addChild(rollButton);
-const storeButton = createButton('store', app.screen.width / 2, app.screen.height * 2 / 5, () => {
+const storeButton = createButton('store', app.screen.width * 3 / 4 * scale, app.screen.height / 5 * scale, () => {
 	//store dice
 	storeDice = selectedDice;
 	drawDice(storeDice, 'stored');
@@ -119,7 +123,7 @@ const storeButton = createButton('store', app.screen.width / 2, app.screen.heigh
 	player.dice = player.dice.concat(currentlyRolled);
 	currentlyRolled = [];
 	eraseDice('current');
-})
+});
 hub.addChild(storeButton);
 
 // Create a container for the health bar and text
@@ -342,7 +346,7 @@ function rollDices(diceOutOfBag) {
 	diceOutOfBag.forEach((die) => {
 		die.face = Math.floor(Math.random() * die.sides) + 1;
 	});
-
+	const sortedByFace = diceOutOfBag.sort((a, b) => a.face - b.face);
 	return (diceOutOfBag);
 
 }
@@ -356,79 +360,95 @@ const removeSelectedFromCurrent = (total, selected) => {
 };
 
 function drawDice(dice, place) {
-	let diceTextStyle = new PIXI.TextStyle({
-		fontFamily: 'Arial',
-		fontSize: 180 * scale,
-		fill: 0xffff, // white color
-		align: 'center',
-		stroke: 0x000000, // Black stroke
-	});
-	let position;
-	switch (place) {
-		case 'current':
-			position = currentRollBackground;
-			break;
-		case 'bank':
-			position = bank;
-			break;
 
-	}
 	texturesPromise.then((textures) => {
 		dice.forEach((dice, i) => {
 			switch (dice.sides) {
 				case 4:
-					drawHelp(new PIXI.Sprite(textures.d4), diceTextStyle, i, position, dice);
+					drawHelp(new PIXI.Sprite(textures.d4), i, dice, place);
 					break;
 				case 6:
-					drawHelp(new PIXI.Sprite(textures.d6), diceTextStyle, i, position, dice);
+					drawHelp(new PIXI.Sprite(textures.d6), i, dice, place);
 					break;
 				case 8:
-					drawHelp(new PIXI.Sprite(textures.d8), diceTextStyle, i, position, dice);
+					drawHelp(new PIXI.Sprite(textures.d8), i, dice, place);
 					break;
 				case 10:
-					drawHelp(new PIXI.Sprite(textures.d10), diceTextStyle, i, position, dice);
+					drawHelp(new PIXI.Sprite(textures.d10), i, dice, place);
 					break;
 
 			}
 			i++;
 		});
 	});
+	dmgTotal = calculateDmg();
+	diceUiContainer.removeChild(diceUiContainer.children.find((element) => element.label == 'dmgText'));
+	const dmgText = new PIXI.Text({ text: "Dmg Total: " + dmgTotal, style: textStyle });
+	dmgText.label = 'dmgText';
+	dmgText.position.set(diceUiContainer.width / 3 * scale, diceUiContainer.height * scale);
+	diceUiContainer.addChild(dmgText);
 }
-function drawHelp(sprite, diceTextStyle, i, position, die) {
+function drawHelp(sprite, i, die, place) {
+	let position;
+	switch (place) {
+		case 'current':
+			position = currentRollBackground;
+			sprite.label = 'dice';
+			break;
+		case 'bank':
+			position = bank;
+			sprite.label = 'dice'
+			break;
+
+	}
 	sprite.scale = scale / 2;
 	sprite.anchor = (0, 0);
 	sprite.x = i * scale * sprite.width;
 	sprite.y = Math.floor(i / 3);
-	let face = new PIXI.Text({
-		text: die.face, style: diceTextStyle
+	let face = createButton(die.face, sprite.width, sprite.height, () => {
+		storeDice(die);
 	});
-	face.position.set(sprite.width * scale, sprite.height * scale / 2);
-	console.log(position);
+	face.style.fill = 0x00000;
+	face.style.fontSize = 100 * scale;
 	position.addChild(sprite);
 	sprite.addChild(face);
 }
 function eraseDice(place) {
-	let diceToRemove = [];
+	let diceToRemove = []
 	switch (place) {
 		case 'current':
-			//finds all the dice 
-			diceToRemove = diceUiContainer.querySelectorAll('[label="current"]');
-			// Remove each child
-			diceToRemove.forEach(child => {
-				diceUiContainer.removeChild(child);
+			//finds and removes all the dice
+			currentRollBackground.children.forEach(element => {
+				if (element.label == "dice") {
+					diceToRemove.push(element);
+				}
 			});
 			break;
 		case 'all':
-			//finds all the dice 
-			diceToRemove = diceUiContainer.querySelectorAll('[label="current"]');
-			diceToRemove.concat(diceUiContainer.querySelectorAll('[label="bank"]'))
-			// Remove each child
-			diceToRemove.forEach(child => {
-				diceUiContainer.removeChild(child);
+			//finds and removes all the dice
+			currentRollBackground.children.forEach(element => {
+				if (element.label == "dice") {
+					diceToRemove.push(element);
+				}
+			});
+			bank.child.forEach(element => {
+				if (element.label == "dice") {
+					diceToRemove.push(element);
+				}
 			});
 			break;
 
 	}
+	console.log(diceToRemove);
+	diceToRemove.forEach(element => {
+		currentRollBackground.removeChild(element);
+	});
+	diceToRemove.forEach(element => {
+		bank.removeChild(element);
+	})
+}
+function storeDice(diceToStore) {
+	console.log(diceToStore);
 }
 
 // Load the button texture
@@ -517,28 +537,19 @@ function loadEnemy(enemies) {
 }
 
 function attackedClick() {
-	let results = rollDices();  // makes an array of dice values
-	let dmg = calculateDmg(results); //adds those dice values together 
-	results.sort((a, b) => a - b);
-	drawDice(results);
-	while (dmgContainer.children[0]) {
-		dmgContainer.removeChild(dmgContainer.children[0]);
-	}
-	const damageTotal = new PIXI.Text({ text: dmg, style: textStyle });
-	dmgContainer.addChild(damageTotal);
+
 
 }
 
-
-
-function calculateDmg(results) {
+function calculateDmg() {
+	let results = currentlyRolled.concat(storedDice);
 	const numberMap = new Map();
-	results.forEach((num) => {
+	results.forEach((dice) => {
 		/* diceElement.textContent = diceElement.textContent + ", " result; */
-		if (numberMap.has(num)) {
-			numberMap.set(num, numberMap.get(num) + 1);
+		if (numberMap.has(dice.face)) {
+			numberMap.set(dice.face, numberMap.get(dice.face) + 1);
 		} else {
-			numberMap.set(num, 1);
+			numberMap.set(dice.face, 1);
 		}
 	});
 
