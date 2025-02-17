@@ -72,8 +72,9 @@ currentRollBackground.position.set(app.screen.width - app.screen.width * 2 / 3 +
 diceUiContainer.addChild(currentRollBackground);
 const bank = new PIXI.Graphics();
 bank.beginFill(0x7393B3, 0.8); // blue grey color with 80% opacity
-bank.drawRect(0 + scale, app.screen.height / 2 + scale, 300 * scale, 300 * scale);
+bank.drawRect(0, 0, 300 * scale, 300 * scale);
 bank.endFill();
+bank.position.set(scale, app.screen.height / 2 + scale);
 diceUiContainer.addChild(bank);
 let bankLabel = new PIXI.Text({ text: 'Store Dice', style: textStyle });
 bankLabel.position.set(bank.x + scale, app.screen.height / 2 + scale);
@@ -103,6 +104,7 @@ const attackButton = createButton('Attack', app.screen.width * 3 / 4 * scale, ap
 	currentlyRolled = [];
 	storeDice = [];
 	eraseDice('all');
+	diceUiContainer.children.find((element) => element.label == 'diceBagNum').text = "Bag: " + player.dice.length;
 });
 hub.addChild(attackButton);
 const rollButton = createButton('Roll', app.screen.width * 3 / 4 * scale, app.screen.height * 2 / 7 * scale, () => {
@@ -117,12 +119,15 @@ const rollButton = createButton('Roll', app.screen.width * 3 / 4 * scale, app.sc
 hub.addChild(rollButton);
 const storeButton = createButton('store', app.screen.width * 3 / 4 * scale, app.screen.height / 5 * scale, () => {
 	//store dice
-	storeDice = selectedDice;
-	drawDice(storeDice, 'stored');
+	storedDice = storedDice.concat(selectedDice);
 	currentlyRolled = removeSelectedFromCurrent(currentlyRolled, selectedDice);
+	console.log('stored dice before draw' + storedDice);
+	drawDice(storedDice, 'bank');
+	selectedDice = [];
 	player.dice = player.dice.concat(currentlyRolled);
 	currentlyRolled = [];
 	eraseDice('current');
+	diceUiContainer.children.find((element) => element.label == 'diceBagNum').text = "Bag: " + player.dice.length;
 });
 hub.addChild(storeButton);
 
@@ -449,6 +454,12 @@ function eraseDice(place) {
 }
 function storeDice(diceToStore) {
 	console.log(diceToStore);
+	if (selectedDice.includes(diceToStore)) {
+		selectedDice.slice(selectedDice.findIndex(diceToStore), 1);
+	} else {
+		selectedDice.push(diceToStore);
+	}
+	console.log(selectedDice);
 }
 
 // Load the button texture
@@ -542,7 +553,9 @@ function attackedClick() {
 }
 
 function calculateDmg() {
+	console.log("currently Rolled " + currentlyRolled + " :  Stored Dice" + storedDice);
 	let results = currentlyRolled.concat(storedDice);
+	console.log("result: " + results);
 	const numberMap = new Map();
 	results.forEach((dice) => {
 		/* diceElement.textContent = diceElement.textContent + ", " result; */
