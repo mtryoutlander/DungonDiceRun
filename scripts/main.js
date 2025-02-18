@@ -98,12 +98,12 @@ hub.addChild(dmgContainer);
 //add attack button to hub
 const attackButton = createButton('Attack', app.screen.width * 3 / 4 * scale, app.screen.height * 1 / 8 * scale, () => {
 	//logic for the attack button
-	attack(storeDice, currentlyRolled);
-	player.dice = player.dice.concat(currentlyRolled);
-	player.dice = player.dice.concat(storeDice);
-	currentlyRolled = [];
-	storeDice = [];
 	eraseDice('all');
+	attack(storedDice, currentlyRolled);
+	player.dice = player.dice.concat(currentlyRolled);
+	player.dice = player.dice.concat(storedDice);
+	currentlyRolled = [];
+	storedDice = [];
 	diceUiContainer.children.find((element) => element.label == 'diceBagNum').text = "Bag: " + player.dice.length;
 });
 hub.addChild(attackButton);
@@ -398,21 +398,25 @@ function drawHelp(sprite, i, die, place) {
 	switch (place) {
 		case 'current':
 			position = currentRollBackground;
-			sprite.label = 'dice';
 			break;
 		case 'bank':
 			position = bank;
-			sprite.label = 'dice'
 			break;
 
 	}
+	sprite.label = 'dice'
 	sprite.scale = scale / 2;
 	sprite.anchor = (0, 0);
 	sprite.x = i * scale * sprite.width;
 	sprite.y = Math.floor(i / 3);
 	let face = createButton(die.face, sprite.width, sprite.height, () => {
-		storeDice(die);
+		let tempDice = die;
+		storeDice(tempDice);
+
 	});
+	if (place == 'bank') {
+		face.interactive = false;
+	}
 	face.style.fill = 0x00000;
 	face.style.fontSize = 100 * scale;
 	position.addChild(sprite);
@@ -423,43 +427,53 @@ function eraseDice(place) {
 	switch (place) {
 		case 'current':
 			//finds and removes all the dice
-			currentRollBackground.children.forEach(element => {
-				if (element.label == "dice") {
-					diceToRemove.push(element);
-				}
-			});
+			if (currentRollBackground.children != null)
+				currentRollBackground.children.forEach(element => {
+					if (element.label == "dice") {
+						diceToRemove.push(element);
+					}
+				});
 			break;
 		case 'all':
 			//finds and removes all the dice
-			currentRollBackground.children.forEach(element => {
-				if (element.label == "dice") {
-					diceToRemove.push(element);
-				}
-			});
-			bank.child.forEach(element => {
-				if (element.label == "dice") {
-					diceToRemove.push(element);
-				}
-			});
+			if (currentRollBackground.children != null)
+				currentRollBackground.children.forEach(element => {
+					if (element.label == "dice") {
+						diceToRemove.push(element);
+					}
+				});
+			if (bank.children != null)
+				bank.children.forEach(element => {
+					if (element.label == "dice") {
+						diceToRemove.push(element);
+					}
+				});
 			break;
 
 	}
 	console.log(diceToRemove);
-	diceToRemove.forEach(element => {
-		currentRollBackground.removeChild(element);
-	});
-	diceToRemove.forEach(element => {
-		bank.removeChild(element);
-	})
+	if (currentRollBackground.children != null)
+		diceToRemove.forEach(element => {
+			currentRollBackground.removeChild(element);
+		});
+	if (bank.children != null)
+		diceToRemove.forEach(element => {
+			bank.removeChild(element);
+		})
 }
 function storeDice(diceToStore) {
 	console.log(diceToStore);
-	if (selectedDice.includes(diceToStore)) {
-		selectedDice.slice(selectedDice.findIndex(diceToStore), 1);
+	// Check if diceToStore is already in selectedDice
+	const index = selectedDice.findIndex(dice => dice === diceToStore);
+
+	if (index !== -1) {
+		// If diceToStore is found, remove it from the array
+		selectedDice.splice(index, 1);
 	} else {
+		// If diceToStore is not found, add it to the array
 		selectedDice.push(diceToStore);
 	}
-	console.log(selectedDice);
+
 }
 
 // Load the button texture
@@ -547,8 +561,12 @@ function loadEnemy(enemies) {
 
 }
 
-function attackedClick() {
-
+function attack() {
+	diceUiContainer.removeChild(diceUiContainer.children.find((element) => element.label == 'dmgText'));
+	const dmgText = new PIXI.Text({ text: "Dmg Total: " + 0, style: textStyle });
+	dmgText.label = 'dmgText';
+	dmgText.position.set(diceUiContainer.width / 3 * scale, diceUiContainer.height * scale);
+	diceUiContainer.addChild(dmgText);
 
 }
 
