@@ -28,15 +28,15 @@ const texturesPromise = PIXI.Assets.load(['d4', 'd6', 'd8', 'd10', 'bag']);
 const player = JSON.parse(localStorage.getItem('player') !== null ? localStorage.getItem('player') : createAdventure());
 const dungenLv = 0;
 const dungenMap = generateDungonMap();
-let storedDice = [], selectedMonster = null, selectedDice = [], currentlyRolled = [], dmgTotal;
+let storedDice = [], selectedMonster = null, selectedDice = [], currentlyRolled = [], dmgTotal, selectedEnemy;
 let isPaused = false;
 
 
 // Define a text style
 const textStyle = new PIXI.TextStyle({
 	fontFamily: 'Arial',
-	fontSize: scale * 50,
-	fill: 0xff1010, // Red color
+	fontSize: scale * 60,
+	fill: 0xffffff, // white color
 	align: 'center',
 	stroke: 0x000000, // Black stroke
 });
@@ -409,18 +409,50 @@ function drawHelp(sprite, i, die, place) {
 	sprite.anchor = (0, 0);
 	sprite.x = i * scale * sprite.width;
 	sprite.y = Math.floor(i / 3);
-	let face = createButton(die.face, sprite.width, sprite.height, () => {
+	// Enable interactivity
+	sprite.interactive = true;
+	sprite.buttonMode = true;
+	sprite.on('pointerdown', () => {
 		let tempDice = die;
 		storeDice(tempDice);
+	});
 
+	sprite.on('pointerover', () => (sprite.tint = 0xaaaaaa));
+	sprite.on('pointerout', () => (sprite.tint = 0xffffff));
+	let face = new PIXI.Text({
+		text: die.face, style: {
+			fontFamily: 'Arial',
+			fontSize: scale,
+			fill: 0x000000, // black color
+			align: 'center',
+			stroke: 0x000000, // Black stroke
+		}
 	});
 	if (place == 'bank') {
-		face.interactive = false;
+		sprite.interactive = false;
 	}
-	face.style.fill = 0x00000;
-	face.style.fontSize = 100 * scale;
+	scaleTextToFitSprite(sprite, face, -25);
 	position.addChild(sprite);
 	sprite.addChild(face);
+}
+function scaleTextToFitSprite(sprite, text, padding) {
+	const maxWidth = sprite.width - padding * 2; // Max width for the text
+	const maxHeight = sprite.height - padding * 2; // Max height for the text
+	console.log('before: ' + text.style.fontSize);
+	// Start with a large font size and reduce it until the text fits
+	let fontSize = 100; // Start with a large font size
+	text.style.fontSize = fontSize;
+
+	// Reduce font size until the text fits within the sprite's width
+	while (text.width > maxWidth || text.height > maxHeight) {
+		fontSize--;
+		text.style.fontSize = fontSize;
+	}
+
+	// Center the text within the sprite
+	text.x = (sprite.width);
+	text.y = (sprite.height);
+	console.log('after: ' + text.style.fontSize);
 }
 function eraseDice(place) {
 	let diceToRemove = []
@@ -520,20 +552,30 @@ function loadEnemy(enemies) {
 				enemySprite.x = enemyX;
 				enemySprite.y = enemyY;
 				enemySprite.scale = scale;
+
+				enemySprite.interactive = true;
+				enemySprite.buttonMode = true;
+				enemySprite.on('pointerdown', () => {
+					selectedEnemy = enemySprite;
+				});
+
+				enemySprite.on('pointerover', () => (enemySprite.tint = 0xaaaaaa));
+				enemySprite.on('pointerout', () => (enemySprite.tint = 0xffffff));
+
 				enemyContainer.addChild(enemySprite);
 				// Create the health bar background (gray)
 				let healthBarBackground = new PIXI.Graphics();
 				healthBarBackground.beginFill(0x808080); // Gray color
-				healthBarBackground.drawRect(enemyX, enemyY + 200 * scale, 200, 20); // Width: 200, Height: 20
+				healthBarBackground.drawRect(0, 0, 200, 20); // Width: 200, Height: 20
 				healthBarBackground.endFill();
-				enemyContainer.addChild(healthBarBackground);
+				enemySprite.addChild(healthBarBackground);
 
 				// Create the health bar (green)
 				let healthBar = new PIXI.Graphics();
 				healthBar.beginFill(0x00FF00); // Green color
-				healthBar.drawRect(enemyX, enemyY + 200 * scale, 200, 20); // Width: 200, Height: 20
+				healthBar.drawRect(0, 0, 200, 20); // Width: 200, Height: 20
 				healthBar.endFill();
-				enemyContainer.addChild(healthBar);
+				enemySprite.addChild(healthBar);
 
 				// Create the health text
 				let healthText = new PIXI.Text({
@@ -544,9 +586,9 @@ function loadEnemy(enemies) {
 						align: 'center'
 					}
 				});
-				healthText.x = enemyX;
-				healthText.y = enemyY + 220 * scale; // Position below the health bar
-				enemyContainer.addChild(healthText);
+				healthText.x = scale;
+				healthText.y = scale; // Position below the health bar
+				enemySprite.addChild(healthText);
 
 
 
