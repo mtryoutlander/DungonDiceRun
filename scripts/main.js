@@ -556,7 +556,7 @@ function loadEnemy(enemies) {
 				enemySprite.interactive = true;
 				enemySprite.buttonMode = true;
 				enemySprite.on('pointerdown', () => {
-					selectedEnemy = enemySprite;
+					selectedEnemy = { logic: enemy, visural: enemySprite };
 				});
 
 				enemySprite.on('pointerover', () => (enemySprite.tint = 0xaaaaaa));
@@ -575,6 +575,7 @@ function loadEnemy(enemies) {
 				healthBar.beginFill(0x00FF00); // Green color
 				healthBar.drawRect(0, 0, 200, 20); // Width: 200, Height: 20
 				healthBar.endFill();
+				healthBar.label = 'currentHp';
 				enemySprite.addChild(healthBar);
 
 				// Create the health text
@@ -588,6 +589,7 @@ function loadEnemy(enemies) {
 				});
 				healthText.x = scale;
 				healthText.y = scale; // Position below the health bar
+				healthText.label = "hpText";
 				enemySprite.addChild(healthText);
 
 
@@ -604,12 +606,24 @@ function loadEnemy(enemies) {
 }
 
 function attack() {
-	diceUiContainer.removeChild(diceUiContainer.children.find((element) => element.label == 'dmgText'));
-	const dmgText = new PIXI.Text({ text: "Dmg Total: " + 0, style: textStyle });
+
+	let enemyHp = selectedEnemy.logic.hp;
+	enemyHp = enemyHp - dmgTotal;
+	selectedEnemy.visural.children.find((element) => element.label == 'currentHp').
+
+
+
+
+
+
+
+
+
+		diceUiContainer.removeChild(diceUiContainer.children.find((element) => element.label == 'dmgText'));
+	const dmgText = new PIXI.Text({ text: "Dmg Total: " + dmgTotal, style: textStyle });
 	dmgText.label = 'dmgText';
 	dmgText.position.set(diceUiContainer.width / 3 * scale, diceUiContainer.height * scale);
 	diceUiContainer.addChild(dmgText);
-
 }
 
 function calculateDmg() {
