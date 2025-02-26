@@ -38,6 +38,10 @@ function calculateDmg(dmgDice) {  /// change it so give an array of dmgDice will
     }
     return dmg;
 }
+function readEffect() {  // this will store the search though all effects in the json and return the need info
+
+}
+
 function playerAttack(dice, effects) {
 
 }
