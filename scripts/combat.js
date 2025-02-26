@@ -1,12 +1,12 @@
-
-function roll(numberOfDiceToRoll) {
+import {player}  from './main.js';
+export function roll(numberOfDiceToRoll) {
     let diceOutOfBag = [];
     if (player.dice.length < numberOfDiceToRoll)
         numberOfDiceToRoll = player.dice.length;
     for (let i = 0; i < numberOfDiceToRoll; i++) {
         let index = Math.floor(Math.random() * (player.dice.length));
         diceOutOfBag.push(player.dice[index]);
-        player.dice.splice(index, 1);
+        player.dice = player.dice.splice(index, 1);
     }
     diceOutOfBag.forEach((die) => {
         die.face = Math.floor(Math.random() * die.sides) + 1;
@@ -15,7 +15,7 @@ function roll(numberOfDiceToRoll) {
     return (diceOutOfBag);
 }
 
-function calculateDmg(dmgDice) {  /// change it so give an array of dmgDice will out put dmg
+export function calculateDmg(dmgDice) {  /// change it so give an array of dmgDice will out put dmg
     const numberMap = new Map();
     dmgDice.forEach((dice) => {
         /* diceElement.textContent = diceElement.textContent + ", " result; */
@@ -42,6 +42,13 @@ function readEffect() {  // this will store the search though all effects in the
 
 }
 
-function playerAttack(dice, effects) {
-
+export function playerAttack(dice, effects) {
+    let enemyHp = selectedEnemy.logic.hp;
+	enemyHp = enemyHp - dmgTotal;
+	selectedEnemy.visural.children.find((element) => element.label == 'currentHp').
+	diceUiContainer.removeChild(diceUiContainer.children.find((element) => element.label == 'dmgText'));
+	const dmgText = new PIXI.Text({ text: "Dmg Total: " + dmgTotal, style: textStyle });
+	dmgText.label = 'dmgText';
+	dmgText.position.set(diceUiContainer.width / 3 * scale, diceUiContainer.height * scale);
+	diceUiContainer.addChild(dmgText);
 }
