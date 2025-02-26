@@ -99,7 +99,7 @@ hub.addChild(dmgContainer);
 const attackButton = createButton('Attack', app.screen.width * 3 / 4 * scale, app.screen.height * 1 / 8 * scale, () => {
 	//logic for the attack button
 	eraseDice('all');
-	attack(storedDice, currentlyRolled);
+	playerAttack(storedDice, currentlyRolled);
 	player.dice = player.dice.concat(currentlyRolled);
 	player.dice = player.dice.concat(storedDice);
 	currentlyRolled = [];
@@ -345,15 +345,11 @@ function roll(numberOfDiceToRoll) {
 		diceOutOfBag.push(player.dice[index]);
 		player.dice.splice(index, 1);
 	}
-	return rollDices(diceOutOfBag);
-}
-function rollDices(diceOutOfBag) {
 	diceOutOfBag.forEach((die) => {
 		die.face = Math.floor(Math.random() * die.sides) + 1;
 	});
-	const sortedByFace = diceOutOfBag.sort((a, b) => a.face - b.face);
+	diceOutOfBag = diceOutOfBag.sort((a, b) => a.face - b.face);
 	return (diceOutOfBag);
-
 }
 
 const removeSelectedFromCurrent = (total, selected) => {
@@ -386,7 +382,7 @@ function drawDice(dice, place) {
 			i++;
 		});
 	});
-	dmgTotal = calculateDmg();
+	dmgTotal = calculateDmg(currentlyRolled.concat(storedDice));
 	diceUiContainer.removeChild(diceUiContainer.children.find((element) => element.label == 'dmgText'));
 	const dmgText = new PIXI.Text({ text: "Dmg Total: " + dmgTotal, style: textStyle });
 	dmgText.label = 'dmgText';
@@ -605,7 +601,7 @@ function loadEnemy(enemies) {
 
 }
 
-function attack() {
+function playerAttack(dice, effects) {
 
 	let enemyHp = selectedEnemy.logic.hp;
 	enemyHp = enemyHp - dmgTotal;
@@ -626,12 +622,9 @@ function attack() {
 	diceUiContainer.addChild(dmgText);
 }
 
-function calculateDmg() {
-	console.log("currently Rolled " + currentlyRolled + " :  Stored Dice" + storedDice);
-	let results = currentlyRolled.concat(storedDice);
-	console.log("result: " + results);
+function calculateDmg(dmgDice) {  /// change it so give an array of dmgDice will out put dmg
 	const numberMap = new Map();
-	results.forEach((dice) => {
+	dmgDice.forEach((dice) => {
 		/* diceElement.textContent = diceElement.textContent + ", " result; */
 		if (numberMap.has(dice.face)) {
 			numberMap.set(dice.face, numberMap.get(dice.face) + 1);
@@ -651,6 +644,9 @@ function calculateDmg() {
 		}
 	}
 	return dmg;
+}
+function readEffect() {  // this will store the search though all effects in the json and return the need info
+
 }
 
 function createAdventure() {
