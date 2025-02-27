@@ -1,0 +1,167 @@
+[
+    {
+        "id": 1,
+        "name": "D4",
+        "sides": [
+            {
+                "face": 1
+            },
+            {
+                "face": 2
+            },
+            {
+                "face": 3
+            },
+            {
+                "face": 4
+            }
+        ],
+        "face": 0,
+        "effect": [],
+        "image": "/assets/dices/D4.png"
+    },
+    {
+        "id": 2,
+        "name": "D6",
+        "sides": [
+            {
+                "face": 1
+            },
+            {
+                "face": 2
+            },
+            {
+                "face": 3
+            },
+            {
+                "face": 4
+            },
+            {
+                "face": 5
+            },
+            {
+                "face": 6
+            }
+        ],
+        "face": 0,
+        "effect": [],
+        "image": "/assets/dices/D6.png"
+    },
+    {
+        "id": 3,
+        "name": "D8",
+        "sides": [
+            {
+                "face": 1
+            },
+            {
+                "face": 2
+            },
+            {
+                "face": 3
+            },
+            {
+                "face": 4
+            },
+            {
+                "face": 5
+            },
+            {
+                "face": 6
+            },
+            {
+                "face": 7
+            },
+            {
+                "face": 8
+            }
+        ],
+        "face": 0,
+        "effect": [],
+        "image": "/assets/dices/D8.png"
+    },
+    {
+        "id": 4,
+        "name": "D10",
+        "sides": [
+            {
+                "face": 1
+            },
+            {
+                "face": 2
+            },
+            {
+                "face": 3
+            },
+            {
+                "face": 4
+            },
+            {
+                "face": 5
+            },
+            {
+                "face": 6
+            },
+            {
+                "face": 7
+            },
+            {
+                "face": 8
+            },
+            {
+                "face": 9
+            },
+            {
+                "face": 10
+            }
+        ],
+        "face": 0,
+        "effect": [],
+        "image": "/assets/dices/D10.png"
+    },
+    {
+        "id": 5,
+        "name": "D12",
+        "sides": [
+            {
+                "face": 1
+            },
+            {
+                "face": 2
+            },
+            {
+                "face": 3
+            },
+            {
+                "face": 4
+            },
+            {
+                "face": 5
+            },
+            {
+                "face": 6
+            },
+            {
+                "face": 7
+            },
+            {
+                "face": 8
+            },
+            {
+                "face": 9
+            },
+            {
+                "face": 10
+            },
+            {
+                "face": 11
+            },
+            {
+                "face": 12
+            }
+        ],
+        "face": 0,
+        "effect": [],
+        "image": "/assets/dices/D12.png"
+    }
+]

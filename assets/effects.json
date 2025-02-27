@@ -1,0 +1,51 @@
+[
+    {
+        "id": 0,
+        "name": "effect name",
+        "description": "Description for Effect ",
+        "combatDescription": "Description for Combat Effect",
+        "sprite": "sprite location"
+    },
+    {
+        "id": 1,
+        "name": "posion",
+        "description": "Their real sick",
+        "combatDescription": "They take 1 damage every roll",
+        "sprite": "../assets/poison.png"
+    },
+    {
+        "id": 2,
+        "name": "stun",
+        "description": "They cant move",
+        "combatDescription": "Their attack clock incress by 1",
+        "sprite": "../assets/stun.png"
+    },
+    {
+        "id": 3,
+        "name": "burn",
+        "description": "They are on fire",
+        "combatDescription": "They take 1 damage every roll",
+        "sprite": "../assets/burn.png"
+    },
+    {
+        "id": 4,
+        "name": "bleed",
+        "description": "They are bleeding",
+        "combatDescription": "They take 1 damage every turn",
+        "sprite": "../assets/bleed.png"
+    },
+    {
+        "id": 5,
+        "name": "confuse",
+        "description": "They are confused",
+        "combatDescription": "They attack a random target next attack",
+        "sprite": "../assets/confuse.png"
+    },
+    {
+        "id": 6,
+        "name": "swipe",
+        "description": "A large slashing attack",
+        "combatDescription": "Deal half damage to one other targets",
+        "sprite": "../assets/swipe.png"
+    }
+]

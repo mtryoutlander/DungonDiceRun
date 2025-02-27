@@ -1,0 +1,27 @@
+[
+    {
+        "id": 0,
+        "name": "enemy name",
+        "description": "Description for Enemy ",
+        "sprite": "sprite location",
+        "health": 0,
+        "attack": 0,
+        "combatEffects": [
+            {
+                "id": 0
+            }
+        ],
+        "statusEffects": [
+            {
+                "id": 0,
+                "value": 0
+            }
+        ],
+        "loot": [
+            {
+                "id": 0,
+                "value": 0
+            }
+        ]
+    }
+]

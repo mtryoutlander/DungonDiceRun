@@ -1,0 +1,34 @@
+[
+    {
+        "id": 0,
+        "name": "item name",
+        "description": "Description for Item ",
+        "sprite": "sprite location",
+        "cost": 0,
+        "effect": "combat effect"
+    },
+    {
+        "id": 1,
+        "name": "Gold",
+        "description": "Its Money",
+        "sprite": "../assets/claymore.png",
+        "cost": 0,
+        "effect": "You buy stuff with it"
+    },
+    {
+        "id": 2,
+        "name": "PosionDagger",
+        "description": "This dagger drips with posion",
+        "sprite": "../assets/poisonDagger.png",
+        "cost": 10,
+        "effect": "when you when dealing dmg with roll of 3 or 4 also apply posion to target"
+    },
+    {
+        "id": 3,
+        "name": "Claymore",
+        "description": "This large sword sings in a great arc",
+        "sprite": "../assets/claymore.png",
+        "cost": 10,
+        "effect": "when dealing dmg apply half dmg to an addtinal random target"
+    }
+]
