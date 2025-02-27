@@ -1,18 +1,18 @@
-import {player}  from './main.js';
-export function roll(numberOfDiceToRoll) {
+import { player } from './main.js';
+export function roll(dice, numberOfDiceToRoll) {
     let diceOutOfBag = [];
-    if (player.dice.length < numberOfDiceToRoll)
-        numberOfDiceToRoll = player.dice.length;
+    if (dice.length < numberOfDiceToRoll)
+        numberOfDiceToRoll = dice.length;
     for (let i = 0; i < numberOfDiceToRoll; i++) {
-        let index = Math.floor(Math.random() * (player.dice.length));
-        diceOutOfBag.push(player.dice[index]);
-        player.dice = player.dice.splice(index, 1);
+        let index = Math.floor(Math.random() * (dice.length));
+        diceOutOfBag.push(dice[index]);
+        dice.splice(index, 1);
     }
     diceOutOfBag.forEach((die) => {
         die.face = Math.floor(Math.random() * die.sides) + 1;
     });
     diceOutOfBag = diceOutOfBag.sort((a, b) => a.face - b.face);
-    return (diceOutOfBag);
+    return ([diceOutOfBag, dice]);
 }
 
 export function calculateDmg(dmgDice) {  /// change it so give an array of dmgDice will out put dmg
@@ -43,12 +43,19 @@ function readEffect() {  // this will store the search though all effects in the
 }
 
 export function playerAttack(dice, effects) {
+
+
+
+
+    /*
+    old code
     let enemyHp = selectedEnemy.logic.hp;
-	enemyHp = enemyHp - dmgTotal;
-	selectedEnemy.visural.children.find((element) => element.label == 'currentHp').
-	diceUiContainer.removeChild(diceUiContainer.children.find((element) => element.label == 'dmgText'));
-	const dmgText = new PIXI.Text({ text: "Dmg Total: " + dmgTotal, style: textStyle });
-	dmgText.label = 'dmgText';
-	dmgText.position.set(diceUiContainer.width / 3 * scale, diceUiContainer.height * scale);
-	diceUiContainer.addChild(dmgText);
+    enemyHp = enemyHp - dmgTotal;
+    selectedEnemy.visural.children.find((element) => element.label == 'currentHp').
+    diceUiContainer.removeChild(diceUiContainer.children.find((element) => element.label == 'dmgText'));
+    const dmgText = new PIXI.Text({ text: "Dmg Total: " + dmgTotal, style: textStyle });
+    dmgText.label = 'dmgText';
+    dmgText.position.set(diceUiContainer.width / 3 * scale, diceUiContainer.height * scale);
+    diceUiContainer.addChild(dmgText);
+    */
 }
