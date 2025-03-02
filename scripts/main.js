@@ -1,9 +1,11 @@
 //import { Application, Graphics, Text, TextStyle } from "pixi.js";  // will use onces packaging app 
-import { roll, playerAttack, calculateDmg } from './combat.js'
-export const minGameWidth = 1920;
-export const minGameHight = 1080;
+import { roll, playerAttack, calculateDmg, getEffect, setEnemies, setTargetEnemy, getEnemies } from './combat.js'
+import fs from 'fs';
+import path from 'path';
+const minGameWidth = 1920;
+const minGameHight = 1080;
 
-export let scale = Math.min(window.innerWidth / minGameWidth, window.innerHeight / minGameHight);
+let scale = Math.min(window.innerWidth / minGameWidth, window.innerHeight / minGameHight);
 // the app it self
 export const app = new PIXI.Application();
 globalThis.__PIXI_APP__ = app;
@@ -30,12 +32,12 @@ export const texturesPromise = PIXI.Assets.load(['d4', 'd6', 'd8', 'd10', 'bag']
 
 // add global variables 
 export const player = JSON.parse(localStorage.getItem('player') !== null ? localStorage.getItem('player') : createAdventure());
-export let storedDice = [], selectedMonster = null, selectedDice = [], currentlyRolled = [], dmgTotal, selectedEnemy;
+let storedDice = [], selectedMonster = null, selectedDice = [], currentlyRolled = [], dmgTotal, selectedEnemy;
 export let isPaused = false;
 
 
 // Define a text style
-export const textStyle = new PIXI.TextStyle({
+const textStyle = new PIXI.TextStyle({
 	fontFamily: 'Arial',
 	fontSize: scale * 60,
 	fill: 0xffffff, // white color
@@ -48,16 +50,10 @@ window.addEventListener('resize', resize);
 resize();
 
 //containers 
-export const diceUiContainer = new PIXI.Container();
-diceUiContainer.label = 'diceUI';
+const diceUiContainer = createContainer('diceUi', app.screen.width / 3, app.screen.height / 2, app.screen.width - app.screen.width / 3 + scale, scale);
 //bag sprite
 texturesPromise.then((textures) => {
-	const bagSprite = new PIXI.Sprite(textures.bag);
-	console.log(bagSprite.width, bagSprite.height); // Should now have valid dimensions
-	bagSprite.x = app.screen.width - app.screen.width / 3 + scale;
-	bagSprite.y = app.screen.height / 2 + scale;
-	bagSprite.scale = scale;
-	bagSprite.label = "bagSprite";
+	const bagSprite = createSprite('bagSprite', textures.bag, app.screen.width - app.screen.width / 3 + scale, scale, null);
 	diceUiContainer.addChild(bagSprite);
 	let diceInBag = new PIXI.Text({ text: 'Bag: ' + player.dice.length, style: textStyle });
 	diceInBag.position.set(bagSprite.x + bagSprite.width / 4, bagSprite.y + bagSprite.height / 2)
@@ -65,14 +61,14 @@ texturesPromise.then((textures) => {
 	diceUiContainer.addChild(diceInBag);
 });
 
-
-export const currentRollBackground = new PIXI.Graphics();
+// replace with sprite later
+const currentRollBackground = new PIXI.Graphics();
 currentRollBackground.beginFill(0xB2BEB5, 0.8); // ash grey color with 80% opacity
 currentRollBackground.drawRect(0, 0, 400 * scale, 300 * scale);
 currentRollBackground.endFill();
 currentRollBackground.position.set(app.screen.width - app.screen.width * 2 / 3 + scale, app.screen.height / 2 + scale);
 diceUiContainer.addChild(currentRollBackground);
-export const bank = new PIXI.Graphics();
+const bank = new PIXI.Graphics();
 bank.beginFill(0x7393B3, 0.8); // blue grey color with 80% opacity
 bank.drawRect(0, 0, 300 * scale, 300 * scale);
 bank.endFill();
@@ -85,16 +81,10 @@ diceUiContainer.addChild(bankLabel);
 
 
 
-export const dmgContainer = new PIXI.Container();
-dmgContainer.position.set(screen.width / 5 + scale, screen.height - screen.height / 2.25 + scale);
-dmgContainer.label = 'dmgUI';
-
-export const enemyContainer = new PIXI.Container();
-enemyContainer.position.set(0, 0);
-enemyContainer.label = 'enemyContainer';
-
-export const hub = new PIXI.Container();
-hub.label = "hub";
+const dmgContainer = createContainer('dmgUI', app.screen.width / 3, app.screen.height / 2, app.screen.width - app.screen.width / 3 + scale, app.screen.height - screen.height / 2.25 + scale);
+const enemyContainer = createContainer('enemyContainer', app.screen.width / 3, app.screen.height / 2, 0, 0);
+const hub = createContainer('hub', app.screen.width / 3, app.screen.height / 2, app.screen.width / 20, app.screen.height / 6);
+//hub is the container that holds all the ui elements
 hub.addChild(diceUiContainer);
 hub.addChild(dmgContainer);
 //add attack button to hub
@@ -110,6 +100,7 @@ const attackButton = createButton('Attack', app.screen.width * 3 / 4 * scale, ap
 	diceUiContainer.children.find((element) => element.label == 'diceBagNum').text = "Bag: " + player.dice.length;
 });
 hub.addChild(attackButton);
+
 const rollButton = createButton('Roll', app.screen.width * 3 / 4 * scale, app.screen.height * 2 / 7 * scale, () => {
 	//roll dice
 	eraseDice('current');
@@ -122,6 +113,7 @@ const rollButton = createButton('Roll', app.screen.width * 3 / 4 * scale, app.sc
 	diceUiContainer.children.find((element) => element.label == 'diceBagNum').text = "Bag: " + player.dice.length;
 });
 hub.addChild(rollButton);
+
 const storeButton = createButton('store', app.screen.width * 3 / 4 * scale, app.screen.height / 5 * scale, () => {
 	//store dice
 	storedDice = storedDice.concat(selectedDice);
@@ -136,7 +128,7 @@ const storeButton = createButton('store', app.screen.width * 3 / 4 * scale, app.
 hub.addChild(storeButton);
 
 // Create a container for the health bar and text
-const healthBarContainer = new PIXI.Container();
+const healthBarContainer = createContainer('healthBarContainer', 200, 50, 0, app.screen.height * 2 / 5);
 app.stage.addChild(healthBarContainer);
 
 // Create the health bar background (gray)
@@ -164,17 +156,9 @@ healthText.x = 0;
 healthText.y = 25; // Position below the health bar
 healthBarContainer.addChild(healthText);
 
-// Position the health bar container
-healthBarContainer.x = 0;
-healthBarContainer.y = app.screen.height * 2 / 5;
-
 hub.addChild(healthBarContainer);
-//hud postion will move everything on the hud
-hub.position.set(app.screen.width / 20, app.screen.height / 6);
 
-
-const startMenu = new PIXI.Container();
-startMenu.label = "startMenue";
+const startMenu = createContainer('startMenue', app.screen.width, app.screen.height, 0, 0);
 const startButton = createButton('Start', app.screen.width / 2, app.screen.height / 5, () => {
 	console.log('Start Game!');
 	startCombat();
@@ -194,11 +178,9 @@ const exitButton = createButton('Exit', app.screen.width / 2, app.screen.height 
 	console.log('Exiting Game!');
 	window.close(); // Note: This may not work in all browsers due to security restrictions
 });
-startMenu.scale = scale;
 startMenu.addChild(exitButton);
 
-const options = new PIXI.Container();
-options.label = "optionMenue";
+const options = createContainer('optionMenue', app.screen.width, app.screen.height, 0, 0);
 // Create a dark transparent overlay
 const overlay = new PIXI.Graphics();
 overlay.beginFill(0x000000, 0.7); // Black color with 70% opacity
@@ -269,44 +251,27 @@ sliderButton.on('pointermove', (event) => {
 	}
 });
 
-const createrCreater = new PIXI.Container();
-createrCreater.label = "CCScean"; //createrCreater scean
+const createrCreater = createContainer('createrCreater', app.screen.width, app.screen.height, 0, 0);//createrCreater scean
 
-const loot = new PIXI.Container();
-loot.label = "lootPopup";  // popup after combat
+const loot = createContainer('loot', app.screen.width, app.screen.height, 0, 0);// popup after combat
 
-const itemDes = new PIXI.Container();
-itemDes.label = "itemDescption";
+const itemDes = createContainer('itemDes', app.screen.width, app.screen.height, 0, 0);
 
-const shop = new PIXI.Container();
-shop.label = "shop";
+const shop = createContainer('shop', app.screen.width, app.screen.height, 0, 0);
 
 mainMenue();
-//custom objects
-function Dice(sides, face) {
-	this.sides = sides;
-	this.face = face;
-}
-//enemy Stats
-function Enemy(name, hp, attack) {
-	this.name = name;
-	this.hp = hp;
-	this.attack = attack;
-}
 
-function pause() { //renders the pause container
+export function pause() { //renders the pause container
 	app.stage.addChild(options);
 	isPaused = true;
 }
-function unpause() {
+export function unpause() {
 	app.stage.removeChild(options);
 	isPaused = false;
 }
 function mainMenue() { //the main menue
 	app.stage.addChild(startMenu);
 }
-
-
 
 const removeSelectedFromCurrent = (total, selected) => {
 	return total.filter(item =>
@@ -315,27 +280,30 @@ const removeSelectedFromCurrent = (total, selected) => {
 		)
 	);
 };
+//load the current enemy group
+function combatLoadEnemies(lv) {
+	let enemies = [];
+	try {
+		const data = fs.readFileSync(path.resolve(__dirname, lv), 'utf8');
+		enemies = JSON.parse(data);
+		setEnemies(enemies);
+	} catch (error) {
+		console.error("Error reading or parsing " + lv, error);
+	}
 
 
-
-// Load the button texture
+}
 function startCombat() {
 	while (app.stage.children[0]) {
 		app.stage.removeChild(app.stage.children[0]);
 	}
-	const enemies = [];
-	let attack = [];
-	attack.push(new Dice(6, 0));
-	attack.push(new Dice(6, 0));
-	enemies.push(new Enemy('goblin', 32, attack));
-	enemies.push(new Enemy('goblin', 32, attack));
-	enemies.push(new Enemy('goblin', 32, attack));
-	loadEnemy(enemies);
+	combatLoadEnemies('goblins.json');
+	loadEnemy();
 	app.stage.addChild(enemyContainer);
 	app.stage.addChild(hub);
 }
 
-export function eraseDice(place) {
+function eraseDice(place) {
 	let diceToRemove = []
 	switch (place) {
 		case 'current':
@@ -364,7 +332,6 @@ export function eraseDice(place) {
 			break;
 
 	}
-	console.log(diceToRemove);
 	if (currentRollBackground.children != null)
 		diceToRemove.forEach(element => {
 			currentRollBackground.removeChild(element);
@@ -374,8 +341,7 @@ export function eraseDice(place) {
 			bank.removeChild(element);
 		})
 }
-export function storeDice(diceToStore) {
-	console.log(diceToStore);
+function storeDice(diceToStore) {
 	// Check if diceToStore is already in selectedDice
 	const index = selectedDice.findIndex(dice => dice === diceToStore);
 
@@ -388,7 +354,7 @@ export function storeDice(diceToStore) {
 	}
 
 }
-export function scaleTextToFitSprite(sprite, text, padding) {
+function scaleTextToFitSprite(sprite, text, padding) {
 	const maxWidth = sprite.width - padding * 2; // Max width for the text
 	const maxHeight = sprite.height - padding * 2; // Max height for the text
 	console.log('before: ' + text.style.fontSize);
@@ -405,38 +371,26 @@ export function scaleTextToFitSprite(sprite, text, padding) {
 	// Center the text within the sprite
 	text.x = (sprite.width);
 	text.y = (sprite.height);
-	console.log('after: ' + text.style.fontSize);
 }
-export function drawDice(dice, place) {
+function drawDice(dice, place) {
 
 	texturesPromise.then((textures) => {
 		dice.forEach((dice, i) => {
-			switch (dice.sides) {
-				case 4:
-					drawHelp(new PIXI.Sprite(textures.d4), i, dice, place);
-					break;
-				case 6:
-					drawHelp(new PIXI.Sprite(textures.d6), i, dice, place);
-					break;
-				case 8:
-					drawHelp(new PIXI.Sprite(textures.d8), i, dice, place);
-					break;
-				case 10:
-					drawHelp(new PIXI.Sprite(textures.d10), i, dice, place);
-					break;
-
-			}
+			drawHelp(createSprite(dice.name, dice.image, 0, 0, () => {
+				let tempDice = dice;
+				storeDice(tempDice);
+			}), i, dice, place);
 			i++;
 		});
 	});
-	dmgTotal = calculateDmg(currentlyRolled.concat(storedDice));
+	dmgTotal = calculateDmg(currentlyRolled.concat(storedDice), player.items);
 	diceUiContainer.removeChild(diceUiContainer.children.find((element) => element.label == 'dmgText'));
 	const dmgText = new PIXI.Text({ text: "Dmg Total: " + dmgTotal, style: textStyle });
 	dmgText.label = 'dmgText';
 	dmgText.position.set(diceUiContainer.width / 3 * scale, diceUiContainer.height * scale);
 	diceUiContainer.addChild(dmgText);
 }
-export function drawHelp(sprite, i, die, place) {
+function drawHelp(sprite, i, die, place) {
 	let position;
 	switch (place) {
 		case 'current':
@@ -444,24 +398,13 @@ export function drawHelp(sprite, i, die, place) {
 			break;
 		case 'bank':
 			position = bank;
+			sprite.interactive = false;
 			break;
 
 	}
-	sprite.label = 'dice'
 	sprite.scale = scale / 2;
-	sprite.anchor = (0, 0);
 	sprite.x = i * scale * sprite.width;
 	sprite.y = Math.floor(i / 3);
-	// Enable interactivity
-	sprite.interactive = true;
-	sprite.buttonMode = true;
-	sprite.on('pointerdown', () => {
-		let tempDice = die;
-		storeDice(tempDice);
-	});
-
-	sprite.on('pointerover', () => (sprite.tint = 0xaaaaaa));
-	sprite.on('pointerout', () => (sprite.tint = 0xffffff));
 	let face = new PIXI.Text({
 		text: die.face, style: {
 			fontFamily: 'Arial',
@@ -471,15 +414,12 @@ export function drawHelp(sprite, i, die, place) {
 			stroke: 0x000000, // Black stroke
 		}
 	});
-	if (place == 'bank') {
-		sprite.interactive = false;
-	}
 	scaleTextToFitSprite(sprite, face, -25);
 	position.addChild(sprite);
 	sprite.addChild(face);
 }
 // Function to create a button
-export function createButton(text, xPostion, yPosition, onClick) {
+function createButton(text, xPostion, yPosition, onClick) {
 	const button = new PIXI.Text({
 		text: text, style: {
 			fontFamily: 'Arial',
@@ -492,6 +432,7 @@ export function createButton(text, xPostion, yPosition, onClick) {
 	button.buttonMode = true;
 	button.anchor.set(0.5);
 	button.position.set(xPostion, yPosition);
+	button.scale = scale;
 
 	// Add event listeners
 	button.on('pointerdown', onClick);
@@ -500,8 +441,35 @@ export function createButton(text, xPostion, yPosition, onClick) {
 
 	return button;
 }
+//Function create container
+function createContainer(label, width, height, x, y) {
+	const container = new PIXI.Container();
+	container.label = label;
+	container.x = x;
+	container.y = y;
+	container.width = width;
+	container.height = height;
+	container.scale = scale;
+	return container;
+}
+function createSprite(label, texture, x, y, onClick) {
+	const sprite = new PIXI.Sprite(texture);
+	sprite.label = label;
+	sprite.x = x;
+	sprite.y = y;
+	if (onclick != null) {
+		sprite.interactive = true;
+		sprite.buttonMode = true;
+		sprite.on('pointerdown', onClick);
+		sprite.on('pointerover', () => (sprite.tint = 0xaaaaaa));
+		sprite.on('pointerout', () => (sprite.tint = 0xffffff));
+
+	}
+	sprite.scale = scale;
+	return sprite;
+}
 // Function to update the health bar and text
-export function updateHealthBar(currentHealth, maxHealth) {
+function updateHealthBar(currentHealth, maxHealth) {
 	const healthPercentage = currentHealth / maxHealth;
 	healthBar.width = 200 * healthPercentage; // Scale the health bar width
 
@@ -509,101 +477,97 @@ export function updateHealthBar(currentHealth, maxHealth) {
 	healthText.text = `HP: ${currentHealth} / ${maxHealth}`;
 }
 //Load enemy
-function loadEnemy(enemies) {
-	const loadPromises = enemies.map((enemy, i) => {
-		let texturePath;
-		console.log(enemy.name + " the enemy name");
-		switch (enemy.name) {
-			case 'goblin':
-				texturePath = 'assets/SickGoblin.png';
-				break;
-			default:
-				console.error(`Unsupported enemy type: ${enemy.name}`);
-				return Promise.resolve();
-		}
-		return PIXI.Assets.load(texturePath)
+function loadEnemy() {
+	const loadPromises = getEnemies().map((enemy, i) => {
+
+		let texturePath = enemy.sprite;
+		PIXI.Assets.load(texturePath)
 			.then((texture) => {
 				let enemyX = (i * 300 + app.screen.width / 20) + scale;
 				let enemyY = scale + app.screen.height / 20;
 
 				//draw enemy sprite
-				let enemySprite = new PIXI.Sprite(texture);
-				enemySprite.x = enemyX;
-				enemySprite.y = enemyY;
-				enemySprite.scale = scale;
-
-				enemySprite.interactive = true;
-				enemySprite.buttonMode = true;
-				enemySprite.on('pointerdown', () => {
+				let enemySprite = createSprite(enemy.name, texture, enemyX, enemyY, () => {
 					selectedEnemy = { logic: enemy, visural: enemySprite };
+
+					enemyContainer.addChild(enemySprite);
+					// Create the health bar background (gray)
+					let healthBarBackground = new PIXI.Graphics();
+					healthBarBackground.beginFill(0x808080); // Gray color
+					healthBarBackground.drawRect(0, 0, 200, 20); // Width: 200, Height: 20
+					healthBarBackground.endFill();
+					enemySprite.addChild(healthBarBackground);
+
+					// Create the health bar (green)
+					let healthBar = new PIXI.Graphics();
+					healthBar.beginFill(0x00FF00); // Green color
+					healthBar.drawRect(0, 0, 200, 20); // Width: 200, Height: 20
+					healthBar.endFill();
+					healthBar.label = 'currentHp';
+					enemySprite.addChild(healthBar);
+
+					// Create the health text
+					let healthText = new PIXI.Text({
+						text: `HP: ${enemy.hp} / ${enemy.hp}`, style: {
+							fontFamily: 'Arial',
+							fontSize: 18,
+							fill: 0xFFFFFF,
+							align: 'center'
+						}
+					});
+					healthText.x = scale;
+					healthText.y = scale; // Position below the health bar
+					healthText.label = "hpText";
+					enemySprite.addChild(healthText);
+
+
+
+				}).catch((err) => {
+					console.error('Failed to load texture:', err);
 				});
-
-				enemySprite.on('pointerover', () => (enemySprite.tint = 0xaaaaaa));
-				enemySprite.on('pointerout', () => (enemySprite.tint = 0xffffff));
-
-				enemyContainer.addChild(enemySprite);
-				// Create the health bar background (gray)
-				let healthBarBackground = new PIXI.Graphics();
-				healthBarBackground.beginFill(0x808080); // Gray color
-				healthBarBackground.drawRect(0, 0, 200, 20); // Width: 200, Height: 20
-				healthBarBackground.endFill();
-				enemySprite.addChild(healthBarBackground);
-
-				// Create the health bar (green)
-				let healthBar = new PIXI.Graphics();
-				healthBar.beginFill(0x00FF00); // Green color
-				healthBar.drawRect(0, 0, 200, 20); // Width: 200, Height: 20
-				healthBar.endFill();
-				healthBar.label = 'currentHp';
-				enemySprite.addChild(healthBar);
-
-				// Create the health text
-				let healthText = new PIXI.Text({
-					text: `HP: ${enemy.hp} / ${enemy.hp}`, style: {
-						fontFamily: 'Arial',
-						fontSize: 18,
-						fill: 0xFFFFFF,
-						align: 'center'
-					}
-				});
-				healthText.x = scale;
-				healthText.y = scale; // Position below the health bar
-				healthText.label = "hpText";
-				enemySprite.addChild(healthText);
-
-
-
-			}).catch((err) => {
-				console.error('Failed to load texture:', err);
 			});
+		// Wait for all enemies to be load
+		Promise.all(loadPromises).then(() => {
+			console.log('All enemeyies loaded:', enemies);
+		});
 	});
-	// Wait for all enemies to be load
-	Promise.all(loadPromises).then(() => {
-		console.log('All enemeyies loaded:', enemies);
-	});
-
 }
 
+function loadPlayer() {
 
-
-function createAdventure() {
-	let dices = [];
-	dices.push(new Dice(6, 0));
-	dices.push(new Dice(6, 0));
-	dices.push(new Dice(6, 0));
-	dices.push(new Dice(6, 0));
-	dices.push(new Dice(6, 0));
-	dices.push(new Dice(6, 0));
-	const player = {
-		hp: 10,
-		money: 0,
-		enemiesDefeated: 0,
-		dice: dices,
-		rollSize: 3
+	let playerData;
+	try {
+		playerData = JSON.parse(localStorage.getItem('player'));
+	} catch (error) {
+		console.error("Error parsing player data from localStorage", error);
 	}
-
-	localStorage.setItem("player", JSON.stringify(player));
-	return JSON.stringify(player);
+	if (playerData) {
+		player.name = playerData.name;
+		player.hp = playerData.hp;
+		player.dice = playerData.dice;
+		player.rollSize = playerData.rollSize;
+	}
+}
+function createPlayer(playerId) {
+	//i want to load player from player.json and save it to localstorage and set the player object
+	let playerData;
+	try {
+		playerData = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../assets/player.json'), 'utf8'));
+	} catch (error) {
+		console.error("Error reading or parsing player.json:", error);
+	}
+	switch (playerId) {
+		case 1:
+			playerData = playerData[0];
+			break;
+	}
+	if (playerData) {
+		player.name = playerData.name;
+		player.hp = playerData.hp;
+		player.dice = playerData.dice;
+		player.rollSize = playerData.rollSize;
+		localStorage.setItem('player', JSON.stringify(player));
+	}
 }
 
 // Handle window resizing
