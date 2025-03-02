@@ -9,7 +9,7 @@ let scale = Math.min(window.innerWidth / minGameWidth, window.innerHeight / minG
 // the app it self
 export const app = new PIXI.Application();
 globalThis.__PIXI_APP__ = app;
-await app.init({
+app.init({
 	width: window.innerWidth,
 	height: window.innerHeight,
 	autoResize: true,
